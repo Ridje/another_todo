@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="margin_base_2x">8dp</dimen>
+    <dimen name="margin_base_1x">4dp</dimen>
+    <dimen name="size_main_title">40sp</dimen>
+    <dimen name="note_image_height">100dp</dimen>
+</resources>
