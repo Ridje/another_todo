@@ -3,8 +3,9 @@ import android.graphics.Bitmap;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Objects;
 
-public class Note {
+public class Note extends Object {
 
     Date mCreatedAt, mModifiedAt;
     String mText;
@@ -13,8 +14,25 @@ public class Note {
     ArrayList<Bitmap> mImages;
     Boolean mPinned;
     Integer mColor;
+    Integer mID;
 
-    public ArrayList<Bitmap> getmImages() {
+    private static volatile Integer maxID = 0;
+
+    @Override
+    public int hashCode() {
+        return mID;
+    }
+
+    public synchronized static Integer getNewID() {
+        maxID++;
+        return maxID;
+    }
+
+    public Integer getID() {
+        return mID;
+    }
+
+    public ArrayList<Bitmap> getImages() {
         return mImages;
     }
 
@@ -34,7 +52,7 @@ public class Note {
         return mColor;
     }
 
-    public ArrayList<Task> getmTasks() {
+    public ArrayList<Task> getTasks() {
         return mTasks;
     }
 
@@ -57,6 +75,7 @@ public class Note {
     }
 
     public Note(String title, String text, Integer tasksCount, Integer imagesCount, Bitmap imageSource, Boolean pinned, Integer color) {
+        this.mID = Note.getNewID();
         this.mCreatedAt = new Date(System.currentTimeMillis());
         this.mModifiedAt = this.mCreatedAt;
         this.mTitle = title;

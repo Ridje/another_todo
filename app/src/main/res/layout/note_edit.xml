@@ -2,19 +2,22 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/note_element"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:orientation="vertical"
     android:layout_margin="@dimen/margin_base_1x">
 
-    <com.google.android.material.textview.MaterialTextView
+    <EditText
         android:id="@+id/note_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/margin_base_1x"
         android:freezesText="true"
         android:gravity="center|top"
+        android:inputType="textShortMessage"
         android:text="@string/note_title"
-        android:textStyle="bold" />
+        android:textSize="@dimen/note_title_size"
+        android:textStyle="bold"
+        android:background="@null"/>
 
     <LinearLayout
         android:id="@+id/note_images_list"
@@ -30,25 +33,24 @@
         android:orientation="vertical">
     </LinearLayout>
 
-    <com.google.android.material.textview.MaterialTextView
+    <EditText
         android:id="@+id/note_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/margin_base_2x"
-        android:gravity="top|start"
-        android:text="@string/note_text" />
+        android:gravity="center_horizontal|top"
+        android:inputType="textMultiLine"
+        android:singleLine="false"
+        android:text="@string/note_text"
+        android:background="@null"/>
 
-    <LinearLayout
+    <EditText
+        android:id="@+id/note_modified_at"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/note_modified_at"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ems="10"
-            android:textAlignment="viewEnd"
-            android:text="@string/note_modified_at"/>
-    </LinearLayout>
+        android:ems="10"
+        android:inputType="datetime"
+        android:text="@string/note_modified_at"
+        android:textAlignment="viewEnd"
+        android:background="@null"/>
 </LinearLayout>

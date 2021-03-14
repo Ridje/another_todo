@@ -6,18 +6,10 @@
     tools:context=".MainActivity"
     android:orientation="vertical">
 
-    <com.google.android.material.textview.MaterialTextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_margin="@dimen/margin_base_2x"
-        android:text="@string/notebook"
-        android:textAlignment="center"
-        android:textSize="@dimen/size_main_title"/>
     <fragment
-        android:id="@+id/notes_list"
+        android:id="@+id/note_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:name="com.example.anothertodo.NotesList"/>
+        android:name="com.example.anothertodo.NoteListFragment"/>
 
 </LinearLayout>
