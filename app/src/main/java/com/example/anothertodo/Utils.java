@@ -42,7 +42,7 @@ public class Utils {
         for (Note e: notesList) {
             if (e.hashCode() == hashCode) return e;
         }
-        return null;
+        return new Note(getNextNoteColor(resources));
     }
 
     private static void initializeNotesList(Resources resources) {

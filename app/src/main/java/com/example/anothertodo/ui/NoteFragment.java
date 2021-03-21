@@ -1,8 +1,5 @@
-package com.example.anothertodo;
+package com.example.anothertodo.ui;
 
-import android.graphics.Bitmap;
-import android.graphics.Paint;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -12,17 +9,11 @@ import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
+import com.example.anothertodo.R;
+import com.example.anothertodo.Utils;
 import com.example.anothertodo.data.Note;
-import com.google.android.material.checkbox.MaterialCheckBox;
-
-import java.text.DateFormat;
-import java.util.ArrayList;
 
 
 public class NoteFragment extends Fragment {

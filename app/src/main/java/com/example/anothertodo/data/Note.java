@@ -1,6 +1,8 @@
 package com.example.anothertodo.data;
 import android.graphics.Bitmap;
 
+import com.example.anothertodo.Utils;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Objects;
@@ -92,6 +94,18 @@ public class Note extends Object {
         for (int i = 0; i < imagesCount; i++) {
             mImages.add(imageSource);
         }
+    }
+
+    public Note(Integer color) {
+        this.mID = Note.getNewID();
+        this.mCreatedAt = new Date(System.currentTimeMillis());
+        this.mModifiedAt = this.mCreatedAt;
+        this.mTitle = "New note";
+        this.mText = "";
+        this.mPinned = false;
+        this.mColor = color;
+        mTasks = new ArrayList<>();
+        mImages = new ArrayList<>();
     }
 
 }

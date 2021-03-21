@@ -1,4 +1,4 @@
-package com.example.anothertodo;
+package com.example.anothertodo.ui;
 
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -13,7 +13,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+
+import com.example.anothertodo.R;
+import com.example.anothertodo.Utils;
 import com.example.anothertodo.data.Note;
+
 import java.util.ArrayList;
 
 public class NoteListFragment extends Fragment {
@@ -97,10 +101,13 @@ public class NoteListFragment extends Fragment {
 
     }
 
-    private void openNote(Note elementToAdd) {
-        Intent intent = new Intent(getActivity(), NoteActivity.class);
-        intent.putExtra(Utils.getKeyNoteElement(), elementToAdd.getID());
-        startActivity(intent);
+    private void openNote(Note currentNote) {
+        FragmentManager fragmentManager = requireActivity().getSupportFragmentManager();
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
+        transaction.replace(R.id.note_list_container, NoteFragment.newInstance(currentNote.getID()));
+        transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+        transaction.addToBackStack(null);
+        transaction.commit();
     }
 
     private void showAtTheEnd(Note currentNote) {
