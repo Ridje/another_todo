@@ -8,6 +8,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,9 +26,10 @@ public class NoteListFragment extends Fragment {
 
     private static final Integer COLUMN_NUMBER = 2;
     private static Integer mSelectedNote = -1;
+    private static RecyclerView mRecycleView;
+    private ArrayList<Note> mNotes;
 
     public NoteListFragment() {
-
     }
 
     public static NoteListFragment newInstance() {
@@ -39,6 +42,7 @@ public class NoteListFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mNotes = Utils.getTestNotesList(getResources());
     }
 
     @Override
@@ -47,39 +51,20 @@ public class NoteListFragment extends Fragment {
         outState.putInt(Utils.getKeyNoteElement(), mSelectedNote);
     }
 
+    // TODO: 22-Mar-21 Ask about use findViewByID before ViewCreated
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
-        LinearLayout linearLayoutGeneral = (LinearLayout) inflater.inflate(R.layout.fragment_note_list, container, false);
-        return linearLayoutGeneral;
+        View rootView = inflater.inflate(R.layout.fragment_note_list, container, false);
+        mNotes = Utils.getTestNotesList(getResources());
+        mRecycleView = rootView.findViewById(R.id.note_list_recycle_view);
+        initRecycleView();
+        return rootView;
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
-        ArrayList<Note> listOfNotes = Utils.getTestNotesList(getResources());
-
-        LinearLayout linearLayoutGeneral = (LinearLayout) view;
-        LinearLayout currentColumn = null;
-
-        for (int i = 0; i < listOfNotes.size(); i++) {
-            final Note currentNote = listOfNotes.get(i);
-            currentColumn = (LinearLayout) ((ViewGroup) linearLayoutGeneral.getChildAt(i % COLUMN_NUMBER)).getChildAt(0);
-            View noteElement = Utils.inflateNote(this, currentColumn, R.layout.note, listOfNotes.get(i), true);
-
-            noteElement.setOnClickListener(v -> {
-                if (getResources().getConfiguration().orientation ==
-                        Configuration.ORIENTATION_PORTRAIT) {
-                    mSelectedNote = currentNote.hashCode();
-                    openNote(currentNote);
-                } else {
-                    showAtTheEnd(currentNote);
-                }
-
-            });
-        }
 
         if (savedInstanceState != null) {
             if (getResources().getConfiguration().orientation ==
@@ -90,8 +75,8 @@ public class NoteListFragment extends Fragment {
         if (getResources().getConfiguration().orientation ==
                 Configuration.ORIENTATION_LANDSCAPE) {
 
-            if ((mSelectedNote == -1 && !listOfNotes.isEmpty())) {
-                mSelectedNote = listOfNotes.get(0).hashCode();
+            if ((mSelectedNote == -1 && !mNotes.isEmpty())) {
+                mSelectedNote = mNotes.get(0).hashCode();
             }
 
             if (mSelectedNote >= 1) {
@@ -99,6 +84,23 @@ public class NoteListFragment extends Fragment {
             }
         }
 
+    }
+
+    private void initRecycleView() {
+        final StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(COLUMN_NUMBER, StaggeredGridLayoutManager.VERTICAL);
+        mRecycleView.setLayoutManager(layoutManager);
+        final NoteListRecycleViewAdapter mRecycleAdapter = new NoteListRecycleViewAdapter(mNotes);
+        mRecycleView.setAdapter(mRecycleAdapter);
+        mRecycleAdapter.setOnItemClickListener((view, position) -> proceedClickOnNote(mNotes.get(position)));
+    }
+
+    private void proceedClickOnNote(Note currentNote) {
+        if (getResources().getConfiguration().orientation ==
+                Configuration.ORIENTATION_LANDSCAPE) {
+            showAtTheEnd(currentNote);
+        } else {
+            openNote(currentNote);
+        }
     }
 
     private void openNote(Note currentNote) {
