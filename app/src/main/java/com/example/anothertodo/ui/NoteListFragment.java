@@ -11,6 +11,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -27,6 +30,7 @@ public class NoteListFragment extends Fragment {
     private Integer mSelectedNote = -1;
     private RecyclerView mRecycleView;
     private ArrayList<Note> mNotes;
+    private NoteListRecycleViewAdapter mRecycleViewAdapter;
 
 
     public NoteListFragment() {
@@ -42,7 +46,7 @@ public class NoteListFragment extends Fragment {
     public static NoteListFragment newInstance(boolean showFavouriteOnly) {
         NoteListFragment fragment = new NoteListFragment();
         Bundle args = new Bundle();
-        args.putBoolean(Utils.getShowFavouriteOnlyKey(), showFavouriteOnly);
+        args.putBoolean(Utils.getKeyShowFavouriteOnly(), showFavouriteOnly);
         fragment.setArguments(args);
         return fragment;
     }
@@ -52,14 +56,14 @@ public class NoteListFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            showFavouriteOnly = getArguments().getBoolean(Utils.getShowFavouriteOnlyKey(), false);
+            showFavouriteOnly = getArguments().getBoolean(Utils.getKeyShowFavouriteOnly(), false);
         }
     }
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putInt(Utils.getKeyNoteElementKey(), mSelectedNote);
+        outState.putInt(Utils.getKeyNoteElementHash(), mSelectedNote);
     }
 
     // TODO: 22-Mar-21 Ask about use findViewByID before ViewCreated
@@ -67,6 +71,7 @@ public class NoteListFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_note_list, container, false);
+        setHasOptionsMenu(true);
         mNotes = Utils.getTestNotesList(getResources(), showFavouriteOnly);
         mRecycleView = rootView.findViewById(R.id.note_list_recycle_view);
         initRecycleView();
@@ -78,9 +83,7 @@ public class NoteListFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         if (savedInstanceState != null) {
-            if (getResources().getConfiguration().orientation ==
-                    Configuration.ORIENTATION_LANDSCAPE)
-            mSelectedNote = savedInstanceState.getInt(Utils.getKeyNoteElementKey(), -1);
+            mSelectedNote = savedInstanceState.getInt(Utils.getKeyNoteElementHash(), -1);
         }
 
         if (getResources().getConfiguration().orientation ==
@@ -96,13 +99,37 @@ public class NoteListFragment extends Fragment {
         }
 
     }
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        inflater.inflate(R.menu.options_note_list_menu, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.add_new_note:
+                Note newNote = new Note(Utils.getNextNoteColor(getContext().getResources()));
+                mNotes.add(newNote);
+                int position = Utils.addNoteToTestNotesList(getContext().getResources(), newNote);
+                mRecycleViewAdapter.notifyItemInserted(position);
+                mRecycleView.smoothScrollToPosition(position);
+                proceedClickOnNote(newNote);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+
+        }
+    }
+
 
     private void initRecycleView() {
         final StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(COLUMN_NUMBER, StaggeredGridLayoutManager.VERTICAL);
         mRecycleView.setLayoutManager(layoutManager);
-        final NoteListRecycleViewAdapter mRecycleAdapter = new NoteListRecycleViewAdapter(mNotes);
-        mRecycleView.setAdapter(mRecycleAdapter);
-        mRecycleAdapter.setOnItemClickListener((view, position) -> proceedClickOnNote(mNotes.get(position)));
+        mRecycleViewAdapter = new NoteListRecycleViewAdapter(mNotes);
+        mRecycleView.setAdapter(mRecycleViewAdapter);
+        mRecycleViewAdapter.setOnItemClickListener((view, position) -> proceedClickOnNote(mNotes.get(position)));
     }
 
     private void proceedClickOnNote(Note currentNote) {

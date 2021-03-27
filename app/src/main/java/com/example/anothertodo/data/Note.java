@@ -107,7 +107,7 @@ public class Note extends Object {
         this.mCreatedAt = new Date(System.currentTimeMillis());
         this.mModifiedAt = this.mCreatedAt;
         this.mTitle = "New note";
-        this.mText = "";
+        this.mText = "Write here what you wish for";
         this.mPinned = false;
         this.mColor = color;
         mTasks = new ArrayList<>();

@@ -84,7 +84,6 @@ public class NoteListRecycleViewAdapter extends RecyclerView.Adapter {
                     itemClickListener.onItemClick(v, getAdapterPosition());
                 }
             });
-
         }
 
         void bindViewHolder(Note note) {
@@ -98,8 +97,6 @@ public class NoteListRecycleViewAdapter extends RecyclerView.Adapter {
             ArrayList<Bitmap> noteImages = note.getImages();
             if (!noteImages.isEmpty()) {
                 for (int i = 0; i < noteImages.size(); i++) {
-
-                    // TODO: 22-Mar-21 Ask about inflate something here or is it a bad idea to inflate on bind dinamycly
                     ImageView image = (ImageView) LayoutInflater.from(mImagesContainer.getContext()).inflate(R.layout.note_image, mImagesContainer, false);
                     image.setImageDrawable(new BitmapDrawable(mImagesContainer.getContext().getResources(), noteImages.get(i)));
                     image.setId(View.generateViewId());

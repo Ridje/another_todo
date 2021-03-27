@@ -7,11 +7,9 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
-import android.util.TimeFormatException;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -31,9 +29,8 @@ public class Utils {
     private static ArrayList<Note> notesList;
     private static int currentColorNumber = 0;
     private static final String KEY_NOTE_ELEMENT = "NoteFrame.NoteElement";
-    private static final String SHOW_FAVOURITE_ONLY = "NoteList.ShowFavouriteOnly";
-
-
+    private static final String KEY_SHOW_FAVOURITE_ONLY = "NoteList.ShowFavouriteOnly";
+    private static final String KEY_CURRENT_SCROLL_POSITION = "NoteList.CurrentScrollPosition";
 
     public static ArrayList<Note> getTestNotesList(Resources resources) {
         return getTestNotesList(resources, false);
@@ -48,6 +45,12 @@ public class Utils {
                 return true;
             }
         }).collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    public static int addNoteToTestNotesList(Resources resources, Note newNote) {
+        initializeNotesList(resources);
+        notesList.add(newNote);
+        return notesList.size() - 1;
     }
 
     public static Note getNote(Resources resources, Integer hashCode) {
@@ -90,11 +93,15 @@ public class Utils {
         return result;
     }
 
-    public static String getShowFavouriteOnlyKey() {
-        return SHOW_FAVOURITE_ONLY;
+    public static String getKeyShowFavouriteOnly() {
+        return KEY_SHOW_FAVOURITE_ONLY;
     }
-    public static String getKeyNoteElementKey() {
+    public static String getKeyNoteElementHash() {
         return KEY_NOTE_ELEMENT;
+    }
+
+    public static String getKeyCurrentScrollPosition() {
+        return KEY_CURRENT_SCROLL_POSITION;
     }
 
     public static String getDateTimeInLocalFormat(Context context, Date date) {
