@@ -27,7 +27,7 @@ public class NoteFragment extends Fragment {
     public static NoteFragment newInstance(Integer noteID) {
         NoteFragment fragment = new NoteFragment();
         Bundle args = new Bundle();
-        args.putInt(Utils.getKeyNoteElement(), noteID);
+        args.putInt(Utils.getKeyNoteElementKey(), noteID);
         fragment.setArguments(args);
         return fragment;
     }
@@ -36,7 +36,7 @@ public class NoteFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mNote = Utils.getNote(getResources(), (getArguments().getInt(Utils.getKeyNoteElement(), -1)));
+            mNote = Utils.getNote(getResources(), (getArguments().getInt(Utils.getKeyNoteElementKey(), -1)));
         }
     }
 

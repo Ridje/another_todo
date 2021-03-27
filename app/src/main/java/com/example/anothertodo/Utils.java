@@ -24,17 +24,30 @@ import com.google.android.material.checkbox.MaterialCheckBox;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.stream.Collectors;
 
 public class Utils {
 
     private static ArrayList<Note> notesList;
     private static int currentColorNumber = 0;
-    private static final String KEY_NOTE_ELEMENT = "NoteActivity.NoteElement";
+    private static final String KEY_NOTE_ELEMENT = "NoteFrame.NoteElement";
+    private static final String SHOW_FAVOURITE_ONLY = "NoteList.ShowFavouriteOnly";
+
+
 
     public static ArrayList<Note> getTestNotesList(Resources resources) {
+        return getTestNotesList(resources, false);
+    }
 
+    public static ArrayList<Note> getTestNotesList(Resources resources, boolean onlyFavourite) {
         initializeNotesList(resources);
-        return notesList;
+        return notesList.stream().filter(note -> {
+            if (onlyFavourite) {
+                return note.getPinned();
+            } else {
+                return true;
+            }
+        }).collect(Collectors.toCollection(ArrayList::new));
     }
 
     public static Note getNote(Resources resources, Integer hashCode) {
@@ -58,7 +71,7 @@ public class Utils {
                 add(new Note("Story", "The untold story of how Lisa Howard’s intimate diplomacy with Cuba’s revolutionary leader changed the course of the Cold War.", 0, 0, defaultImage, true, getNextNoteColor(resources)));
                 add(new Note("Shame and Survival", "She tried public appearances. She tried being reclusive. She tried leaving the country, and she tried finding a job. But the epic humiliation of 1998, when her affair with Bill Clinton became an all-consuming story, has followed Monica Lewinsky every day.", 0, 0, defaultImage, false, getNextNoteColor(resources)));
                 add(new Note("Fix machine", "You could argue that in agreeing to participate in an HBO documentary called Monica in Black and White I had signed up to be shamed and publicly humiliated yet again.", 0, 2, defaultImage, false, getNextNoteColor(resources)));
-                add(new Note("Exchange money", "Don't forget to exchange a money", 0, 0, defaultImage, false, getNextNoteColor(resources)));
+                add(new Note("Exchange money", "Don't forget to exchange a money", 0, 0, defaultImage, true, getNextNoteColor(resources)));
                 add(new Note("Take kids", "task text", 0, 0, defaultImage, false, getNextNoteColor(resources)));
                 add(new Note("Send post", "Send email", 0, 0, defaultImage, false, getNextNoteColor(resources)));
                 add(new Note("Don't smoke", "The Rans S-10 Sakota is an American single-engined, tractor configuration, two-seats in side-by-side configuration, mid-wing monoplane designed by Randy Schlitter for aerobatics and manufactured by Rans Inc. The Sakota is available in kit form for amateur construction.", 0, 0, defaultImage, true, getNextNoteColor(resources)));
@@ -77,7 +90,10 @@ public class Utils {
         return result;
     }
 
-    public static String getKeyNoteElement() {
+    public static String getShowFavouriteOnlyKey() {
+        return SHOW_FAVOURITE_ONLY;
+    }
+    public static String getKeyNoteElementKey() {
         return KEY_NOTE_ELEMENT;
     }
 

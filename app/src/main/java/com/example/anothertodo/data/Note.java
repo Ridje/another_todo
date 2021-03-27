@@ -18,6 +18,8 @@ public class Note extends Object {
     Integer mColor;
     Integer mID;
 
+
+
     private static volatile Integer maxID = 0;
 
     @Override
@@ -32,6 +34,10 @@ public class Note extends Object {
 
     public Integer getID() {
         return mID;
+    }
+
+    public Boolean getPinned() {
+        return mPinned;
     }
 
     public ArrayList<Bitmap> getImages() {

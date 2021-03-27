@@ -1,6 +1,5 @@
 package com.example.anothertodo.ui;
 
-import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
@@ -14,7 +13,6 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 
 import com.example.anothertodo.R;
 import com.example.anothertodo.Utils;
@@ -25,9 +23,11 @@ import java.util.ArrayList;
 public class NoteListFragment extends Fragment {
 
     private static final Integer COLUMN_NUMBER = 2;
-    private static Integer mSelectedNote = -1;
-    private static RecyclerView mRecycleView;
+    private boolean showFavouriteOnly = false;
+    private Integer mSelectedNote = -1;
+    private RecyclerView mRecycleView;
     private ArrayList<Note> mNotes;
+
 
     public NoteListFragment() {
     }
@@ -39,16 +39,27 @@ public class NoteListFragment extends Fragment {
         return fragment;
     }
 
+    public static NoteListFragment newInstance(boolean showFavouriteOnly) {
+        NoteListFragment fragment = new NoteListFragment();
+        Bundle args = new Bundle();
+        args.putBoolean(Utils.getShowFavouriteOnlyKey(), showFavouriteOnly);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mNotes = Utils.getTestNotesList(getResources());
+        if (getArguments() != null) {
+            showFavouriteOnly = getArguments().getBoolean(Utils.getShowFavouriteOnlyKey(), false);
+        }
     }
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putInt(Utils.getKeyNoteElement(), mSelectedNote);
+        outState.putInt(Utils.getKeyNoteElementKey(), mSelectedNote);
     }
 
     // TODO: 22-Mar-21 Ask about use findViewByID before ViewCreated
@@ -56,7 +67,7 @@ public class NoteListFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_note_list, container, false);
-        mNotes = Utils.getTestNotesList(getResources());
+        mNotes = Utils.getTestNotesList(getResources(), showFavouriteOnly);
         mRecycleView = rootView.findViewById(R.id.note_list_recycle_view);
         initRecycleView();
         return rootView;
@@ -69,7 +80,7 @@ public class NoteListFragment extends Fragment {
         if (savedInstanceState != null) {
             if (getResources().getConfiguration().orientation ==
                     Configuration.ORIENTATION_LANDSCAPE)
-            mSelectedNote = savedInstanceState.getInt(Utils.getKeyNoteElement(), -1);
+            mSelectedNote = savedInstanceState.getInt(Utils.getKeyNoteElementKey(), -1);
         }
 
         if (getResources().getConfiguration().orientation ==
@@ -106,7 +117,7 @@ public class NoteListFragment extends Fragment {
     private void openNote(Note currentNote) {
         FragmentManager fragmentManager = requireActivity().getSupportFragmentManager();
         FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.replace(R.id.note_list_container, NoteFragment.newInstance(currentNote.getID()));
+        transaction.replace(R.id.frame_workflow, NoteFragment.newInstance(currentNote.getID()));
         transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
         transaction.addToBackStack(null);
         transaction.commit();

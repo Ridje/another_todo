@@ -34,6 +34,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.header_bar, menu);
         return true;
@@ -89,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
                 showFragment(new NoteListFragment());
                 return true;
             case R.id.navigation_favourite:
-                showFragment(new Fragment());
+                showFragment(NoteListFragment.newInstance(true));
                 return true;
             case R.id.navigation_settings:
                 showFragment(new SettingsFragment());
@@ -104,7 +109,8 @@ public class MainActivity extends AppCompatActivity {
     private void showFragment(Fragment fragment) {
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.replace(R.id.note_list_container, fragment);
+        transaction.replace(R.id.frame_workflow, fragment);
+        transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
         transaction.commit();
     }
 
