@@ -6,7 +6,6 @@ import android.graphics.drawable.BitmapDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
@@ -18,6 +17,7 @@ import com.example.anothertodo.Utils;
 import com.example.anothertodo.data.Note;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.checkbox.MaterialCheckBox;
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textview.MaterialTextView;
 
 import java.util.ArrayList;
@@ -108,15 +108,23 @@ public class NoteListRecycleViewAdapter extends RecyclerView.Adapter {
             if (!noteTasks.isEmpty()) {
                 for (int i = 0; i < noteTasks.size(); i++) {
 
-                    MaterialCheckBox taskCheckbox = (MaterialCheckBox) LayoutInflater.from(mImagesContainer.getContext()).inflate(R.layout.note_task, mTasksContainer, false);
+                    ViewGroup taskLine = (ViewGroup) LayoutInflater.from(mImagesContainer.getContext()).inflate(R.layout.note_task, mTasksContainer, false);
+
+                    MaterialCheckBox taskCheckbox = taskLine.findViewById(R.id.note_task_checkbox);
                     taskCheckbox.setChecked(noteTasks.get(i).isCompleted());
                     taskCheckbox.setId(View.generateViewId());
-                    Utils.setFlagStrikeThroughText(taskCheckbox, taskCheckbox.isChecked());
-                    taskCheckbox.setText(noteTasks.get(i).getText());
                     taskCheckbox.setClickable(false);
                     taskCheckbox.setBackgroundColor(Color.TRANSPARENT);
 
-                    mTasksContainer.addView(taskCheckbox);
+                    TextInputEditText taskText = taskLine.findViewById(R.id.note_task_text);
+                    taskText.setText(noteTasks.get(i).getText());
+                    taskText.setEnabled(!noteTasks.get(i).isCompleted());
+                    taskText.setFocusable(false);
+                    taskText.setClickable(false);
+                    Utils.setFlagStrikeThroughText(taskText, taskCheckbox.isChecked());
+                    taskText.setId(View.generateViewId());
+
+                    mTasksContainer.addView(taskLine);
                 }
             }
 

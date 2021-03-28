@@ -1,0 +1,11 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/menu_item_choose_colors"
+        app:showAsAction="ifRoom"
+        android:icon="@drawable/ic_choose_color_blue"
+        android:title="">
+        <menu>
+        </menu>
+    </item>
+</menu>

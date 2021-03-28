@@ -27,9 +27,25 @@ public class Note extends Object {
         return mID;
     }
 
+    public void setTitle(String title) {
+        this.mTitle = title;
+    }
+
+    public void setText(String text) {
+        this.mText = text;
+    }
+
+    public void setModifiedAt() {
+        mModifiedAt = new Date(System.currentTimeMillis());
+    }
+
     public synchronized static Integer getNewID() {
         maxID++;
         return maxID;
+    }
+
+    public void setColor(Integer mColor) {
+        this.mColor = mColor;
     }
 
     public Integer getID() {
@@ -64,9 +80,22 @@ public class Note extends Object {
         return mTasks;
     }
 
+
     public class Task {
         String mText;
         boolean mCompleted;
+
+        public void setText(String mText) {
+            this.mText = mText;
+        }
+
+        public void setCompleted(boolean mCompleted) {
+            this.mCompleted = mCompleted;
+        }
+
+        public Note getNote() {
+            return Note.this;
+        }
 
         public String getText() {
             return mText;
@@ -106,8 +135,8 @@ public class Note extends Object {
         this.mID = Note.getNewID();
         this.mCreatedAt = new Date(System.currentTimeMillis());
         this.mModifiedAt = this.mCreatedAt;
-        this.mTitle = "New note";
-        this.mText = "Write here what you wish for";
+        this.mTitle = "";
+        this.mText = "";
         this.mPinned = false;
         this.mColor = color;
         mTasks = new ArrayList<>();

@@ -14,4 +14,21 @@
     <string name="help">Help</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <integer-array name="android_drawablew_colors">
+        <item>@drawable/ic_choose_color_blue</item>
+        <item>@drawable/ic_choose_color_purple</item>
+        <item>@drawable/ic_choose_color_orange</item>
+        <item>@drawable/ic_choose_color_red</item>
+        <item>@drawable/ic_choose_color_green</item>
+    </integer-array>
+
+    <integer-array name="android_colors">
+        <item>@color/blue</item>
+        <item>@color/purple</item>
+        <item>@color/orange</item>
+        <item>@color/red</item>
+        <item>@color/green</item>
+    </integer-array>
+
 </resources>
