@@ -10,6 +10,7 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -29,6 +30,7 @@ public class NoteListFragment extends Fragment implements NotelistObserver {
     private static final Integer COLUMN_NUMBER = 2;
     private boolean showFavouriteOnly = false;
     private Integer mSelectedNote = -1;
+    private Note mLastClickedNote = null;
     private RecyclerView mRecycleView;
     private ArrayList<Note> mNotes;
     private NoteListRecycleViewAdapter mRecycleViewAdapter;
@@ -106,6 +108,40 @@ public class NoteListFragment extends Fragment implements NotelistObserver {
     }
 
     @Override
+    public void onCreateContextMenu(@NonNull ContextMenu menu, @NonNull View v, @Nullable ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        MenuInflater inflater = requireActivity().getMenuInflater();
+        inflater.inflate(R.menu.note_list_item_context_menu, menu);
+    }
+
+    @Override
+    public boolean onContextItemSelected(@NonNull MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.context_action_delete:
+                if (mLastClickedNote != null) {
+                    mNotes.remove(mLastClickedNote);
+                    mRecycleViewAdapter.notifyDataSetChanged();
+                    Utils.removeNoteFromNotesList(getResources(), mLastClickedNote);
+                    mLastClickedNote = null;
+                    if (getResources().getConfiguration().orientation ==
+                            Configuration.ORIENTATION_LANDSCAPE) {
+
+                        if (!mNotes.isEmpty()) {
+                            mSelectedNote = mNotes.get(0).hashCode();
+                        }
+
+                        if (mSelectedNote >= 1) {
+                            showAtTheEnd(Utils.getNote(getResources(), mSelectedNote));
+                        }
+                    }
+                    return true;
+                }
+        }
+        return super.onContextItemSelected(item);
+
+    }
+
+    @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 
         int id = item.getItemId();
@@ -128,9 +164,21 @@ public class NoteListFragment extends Fragment implements NotelistObserver {
     private void initRecycleView() {
         final StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(COLUMN_NUMBER, StaggeredGridLayoutManager.VERTICAL);
         mRecycleView.setLayoutManager(layoutManager);
-        mRecycleViewAdapter = new NoteListRecycleViewAdapter(mNotes);
+        mRecycleViewAdapter = new NoteListRecycleViewAdapter(mNotes, this);
         mRecycleView.setAdapter(mRecycleViewAdapter);
-        mRecycleViewAdapter.setOnItemClickListener((view, position) -> proceedClickOnNote(mNotes.get(position)));
+        mRecycleViewAdapter.setOnItemClickListener(new NoteListRecycleViewAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(View view, int position) {
+                proceedClickOnNote(mNotes.get(position));
+            }
+
+            @Override
+            public void onLongItemClick(View view, int position) {
+                mLastClickedNote = mNotes.get(position);
+            }
+        });
+
+
     }
 
     private void proceedClickOnNote(Note currentNote) {

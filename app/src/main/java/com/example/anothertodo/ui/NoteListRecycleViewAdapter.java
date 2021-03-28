@@ -10,6 +10,7 @@ import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.LinearLayoutCompat;
+import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.anothertodo.R;
@@ -26,8 +27,10 @@ public class NoteListRecycleViewAdapter extends RecyclerView.Adapter{
 
     ArrayList<Note> mNotes;
     private OnItemClickListener itemClickListener;
+    NoteListFragment mContextFragment;
 
-    public NoteListRecycleViewAdapter(ArrayList<Note> notes) {
+    public NoteListRecycleViewAdapter(ArrayList<Note> notes, NoteListFragment contextFragment) {
+        this.mContextFragment = contextFragment;
         this.mNotes = notes;
     }
 
@@ -60,6 +63,7 @@ public class NoteListRecycleViewAdapter extends RecyclerView.Adapter{
 
     public interface OnItemClickListener {
         void onItemClick(View view , int position);
+        void onLongItemClick(View view, int position);
     }
 
 
@@ -88,6 +92,16 @@ public class NoteListRecycleViewAdapter extends RecyclerView.Adapter{
                     itemClickListener.onItemClick(v, getAdapterPosition());
                 }
             });
+
+            itemView.setOnLongClickListener(v -> {
+                        if (itemClickListener != null) {
+                            itemClickListener.onLongItemClick(v, getAdapterPosition());
+                        }
+                        return false;
+                    }
+            );
+
+            registerContextMenu(itemView);
         }
 
         void bindViewHolder(Note note) {
@@ -135,6 +149,12 @@ public class NoteListRecycleViewAdapter extends RecyclerView.Adapter{
             mText.setText(note.getText());
             mModifiedAt.setText(Utils.getDateTimeInLocalFormat(mModifiedAt.getContext(), note.getModifiedAt()));
 
+        }
+
+        void registerContextMenu(@NonNull View itemView) {
+            if (mContextFragment != null){
+                mContextFragment.registerForContextMenu(itemView);
+            }
         }
     }
 }
