@@ -4,8 +4,16 @@
         android:id="@+id/menu_item_choose_colors"
         app:showAsAction="ifRoom"
         android:icon="@drawable/ic_choose_color_blue"
-        android:title="">
+        android:title="Note color"
+        android:orderInCategory="1">
         <menu>
         </menu>
+    </item>
+    <item
+        android:id="@+id/menu_item_remove_note"
+        app:showAsAction="always"
+        android:title="Delete note"
+        android:icon="@android:drawable/ic_menu_delete"
+        android:orderInCategory="2">
     </item>
 </menu>

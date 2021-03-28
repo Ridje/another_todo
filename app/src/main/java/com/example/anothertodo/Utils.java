@@ -53,6 +53,11 @@ public class Utils {
         return notesList.size() - 1;
     }
 
+    public static void removeNoteFromNotesList(Resources resources, Note removableNote) {
+        initializeNotesList(resources);
+        notesList.remove(removableNote);
+    }
+
     public static Note getNote(Resources resources, Integer hashCode) {
         initializeNotesList(resources);
         for (Note e: notesList) {

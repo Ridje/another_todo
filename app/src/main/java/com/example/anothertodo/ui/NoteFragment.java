@@ -1,6 +1,6 @@
 package com.example.anothertodo.ui;
 
-import android.content.Context;
+import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
@@ -9,6 +9,8 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -17,14 +19,9 @@ import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import com.example.anothertodo.R;
 import com.example.anothertodo.Utils;
@@ -34,7 +31,6 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textview.MaterialTextView;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 
 public class NoteFragment extends Fragment {
@@ -71,6 +67,13 @@ public class NoteFragment extends Fragment {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             mNote = Utils.getNote(getResources(), (getArguments().getInt(Utils.getKeyNoteElementHash(), -1)));
+        }
+        if (savedInstanceState != null && getResources().getConfiguration().orientation ==
+                Configuration.ORIENTATION_PORTRAIT) {
+            FragmentManager fragmentManager = requireFragmentManager();
+            FragmentTransaction myTr = fragmentManager.beginTransaction();
+            myTr.remove(this);
+            myTr.commit();
         }
         setHasOptionsMenu(true);
     }
@@ -110,38 +113,64 @@ public class NoteFragment extends Fragment {
 
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.note_edit_fragment_option_menu, menu);
+
     }
 
     @Override
     public void onPrepareOptionsMenu(@NonNull Menu menu) {
         super.onPrepareOptionsMenu(menu);
-        MenuItem menuColors = menu.findItem(R.id.menu_item_choose_colors);
-        mRootColorChoose = menuColors.getSubMenu();
+        if (menuItems.isEmpty()) {
+            MenuItem menuColors = menu.findItem(R.id.menu_item_choose_colors);
+            mRootColorChoose = menuColors.getSubMenu();
 
-        for (int i = 0; i < colorIcons.length(); i++) {
-            MenuItem addedColorItem = menuColors.getSubMenu().add("");
-            addedColorItem.setIcon(colorIcons.getDrawable(i));
-            menuItems.add(addedColorItem);
-            if (mNote.getColor().equals(colorValues.getColor(i, 0))) {
-                menuColors.getSubMenu().setIcon(colorIcons.getDrawable(i));
+            for (int i = 0; i < colorIcons.length(); i++) {
+                MenuItem addedColorItem = menuColors.getSubMenu().add("");
+                addedColorItem.setIcon(colorIcons.getDrawable(i));
+                menuItems.add(addedColorItem);
+                if (mNote.getColor().equals(colorValues.getColor(i, 0))) {
+                    menuColors.getSubMenu().setIcon(colorIcons.getDrawable(i));
+                }
             }
         }
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-
         for (int i = 0; i < menuItems.size(); i++) {
             if (menuItems.get(i).equals(item)) {
                 mNote.setColor(colorValues.getColor(i, mNote.getColor()));
                 updateNoteViewBackgroundColor();
                 mRootColorChoose.setIcon(colorIcons.getDrawable(i));
-                break;
+                return true;
             }
+        }
+        if (item.getItemId() == R.id.menu_item_remove_note) {
+            Utils.removeNoteFromNotesList(getResources(), mNote);
+            if (getResources().getConfiguration().orientation ==
+                    Configuration.ORIENTATION_LANDSCAPE) {
+
+                FragmentManager fragmentManager = requireFragmentManager();
+                FragmentTransaction transaction = fragmentManager.beginTransaction();
+                transaction.replace(R.id.frame_workflow, new NoteListFragment());
+                transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+                transaction.remove(this);
+                transaction.commit();
+            } else {
+                FragmentManager fragmentManager = requireFragmentManager();
+                fragmentManager.popBackStack();
+            }
+
+            return true;
         }
 
         return true;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
     }
 
     @Override
@@ -275,4 +304,5 @@ public class NoteFragment extends Fragment {
         mNote.setModifiedAt();
         updateModifiedAtView();
     }
+
 }

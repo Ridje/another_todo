@@ -20,6 +20,7 @@ import android.view.ViewGroup;
 import com.example.anothertodo.R;
 import com.example.anothertodo.Utils;
 import com.example.anothertodo.data.Note;
+import com.example.anothertodo.utility.RemovableItemsContainer;
 
 import java.util.ArrayList;
 

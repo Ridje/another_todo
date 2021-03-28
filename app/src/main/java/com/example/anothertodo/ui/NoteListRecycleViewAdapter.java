@@ -22,7 +22,7 @@ import com.google.android.material.textview.MaterialTextView;
 
 import java.util.ArrayList;
 
-public class NoteListRecycleViewAdapter extends RecyclerView.Adapter {
+public class NoteListRecycleViewAdapter extends RecyclerView.Adapter{
 
     ArrayList<Note> mNotes;
     private OnItemClickListener itemClickListener;
@@ -53,6 +53,7 @@ public class NoteListRecycleViewAdapter extends RecyclerView.Adapter {
     public void setOnItemClickListener(OnItemClickListener itemClickListener){
         this.itemClickListener = itemClickListener;
     }
+
 
     public interface OnItemClickListener {
         void onItemClick(View view , int position);
@@ -93,7 +94,7 @@ public class NoteListRecycleViewAdapter extends RecyclerView.Adapter {
             mHashCode.setText("#" + Integer.toString(note.hashCode()));
 
             mCardView.setBackgroundColor(note.getColor());
-
+            mImagesContainer.removeAllViews();
             ArrayList<Bitmap> noteImages = note.getImages();
             if (!noteImages.isEmpty()) {
                 for (int i = 0; i < noteImages.size(); i++) {
@@ -103,7 +104,7 @@ public class NoteListRecycleViewAdapter extends RecyclerView.Adapter {
                     mImagesContainer.addView(image);
                 }
             }
-
+            mTasksContainer.removeAllViews();
             ArrayList<Note.Task> noteTasks = note.getTasks();
             if (!noteTasks.isEmpty()) {
                 for (int i = 0; i < noteTasks.size(); i++) {
