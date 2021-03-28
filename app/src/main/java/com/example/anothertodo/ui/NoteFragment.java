@@ -1,5 +1,6 @@
 package com.example.anothertodo.ui;
 
+import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.graphics.Color;
@@ -26,6 +27,8 @@ import android.widget.ImageView;
 import com.example.anothertodo.R;
 import com.example.anothertodo.Utils;
 import com.example.anothertodo.data.Note;
+import com.example.anothertodo.observer.NotelistHolder;
+import com.example.anothertodo.observer.NotelistHolderGetter;
 import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textview.MaterialTextView;
@@ -38,6 +41,8 @@ public class NoteFragment extends Fragment {
     private Note mNote;
     private static TypedArray colorValues;
     private static TypedArray colorIcons;
+
+    private NotelistHolder publisher;
 
     private ArrayList<MenuItem> menuItems = new ArrayList<>();
     private SubMenu mRootColorChoose;
@@ -76,6 +81,12 @@ public class NoteFragment extends Fragment {
             myTr.commit();
         }
         setHasOptionsMenu(true);
+    }
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        publisher = ((NotelistHolderGetter) context).getNotelistHolder();
     }
 
     @Override
@@ -150,13 +161,7 @@ public class NoteFragment extends Fragment {
             Utils.removeNoteFromNotesList(getResources(), mNote);
             if (getResources().getConfiguration().orientation ==
                     Configuration.ORIENTATION_LANDSCAPE) {
-
-                FragmentManager fragmentManager = requireFragmentManager();
-                FragmentTransaction transaction = fragmentManager.beginTransaction();
-                transaction.replace(R.id.frame_workflow, new NoteListFragment());
-                transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
-                transaction.remove(this);
-                transaction.commit();
+                publisher.notifyItemRemoved();
             } else {
                 FragmentManager fragmentManager = requireFragmentManager();
                 fragmentManager.popBackStack();

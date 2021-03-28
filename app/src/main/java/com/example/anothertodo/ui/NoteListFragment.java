@@ -20,11 +20,11 @@ import android.view.ViewGroup;
 import com.example.anothertodo.R;
 import com.example.anothertodo.Utils;
 import com.example.anothertodo.data.Note;
-import com.example.anothertodo.utility.RemovableItemsContainer;
+import com.example.anothertodo.observer.NotelistObserver;
 
 import java.util.ArrayList;
 
-public class NoteListFragment extends Fragment {
+public class NoteListFragment extends Fragment implements NotelistObserver {
 
     private static final Integer COLUMN_NUMBER = 2;
     private boolean showFavouriteOnly = false;
@@ -157,5 +157,24 @@ public class NoteListFragment extends Fragment {
         transaction.replace(R.id.note_container, NoteFragment.newInstance(currentNote.getID()));
         transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
         transaction.commit();
+    }
+
+    @Override
+    public void notifyNotelistChanged() {
+        mNotes = Utils.getTestNotesList(getResources(), showFavouriteOnly);
+        if (getResources().getConfiguration().orientation ==
+                Configuration.ORIENTATION_LANDSCAPE) {
+
+            if (!mNotes.isEmpty()) {
+                mSelectedNote = mNotes.get(0).hashCode();
+            }
+
+            if (mSelectedNote >= 1) {
+                showAtTheEnd(Utils.getNote(getResources(), mSelectedNote));
+            }
+        }
+        // TODO: 28-Mar-21 remove it after setting source of data - database 
+        mRecycleViewAdapter.changeSource(mNotes);
+        mRecycleViewAdapter.notifyDataSetChanged();
     }
 }

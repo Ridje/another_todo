@@ -14,13 +14,17 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.example.anothertodo.observer.NotelistHolder;
+import com.example.anothertodo.observer.NotelistHolderGetter;
+import com.example.anothertodo.observer.NotelistObserver;
 import com.example.anothertodo.ui.HelpFragment;
 import com.example.anothertodo.ui.NoteListFragment;
 import com.example.anothertodo.ui.SettingsFragment;
 import com.google.android.material.navigation.NavigationView;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements NotelistHolderGetter {
     Toolbar mActionBar;
+    private NotelistHolder publisher = new NotelistHolder();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,6 +111,13 @@ public class MainActivity extends AppCompatActivity {
         transaction.replace(R.id.frame_workflow, fragment);
         transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
         transaction.commit();
+        if (fragment instanceof NoteListFragment) {
+            publisher.subscribe((NotelistObserver) fragment);
+        }
     }
 
+    @Override
+    public NotelistHolder getNotelistHolder() {
+        return publisher;
+    }
 }

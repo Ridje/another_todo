@@ -40,6 +40,9 @@ public class NoteListRecycleViewAdapter extends RecyclerView.Adapter{
         return new ViewHolder(view);
     }
 
+    public void changeSource(ArrayList<Note> newSource) {
+        this.mNotes = newSource;
+    }
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         ((ViewHolder) holder).bindViewHolder(mNotes.get(position));
@@ -91,7 +94,7 @@ public class NoteListRecycleViewAdapter extends RecyclerView.Adapter{
 
             mTitle.setText(note.getTitle());
 
-            mHashCode.setText("#" + Integer.toString(note.hashCode()));
+            mHashCode.setText("#" + note.hashCode());
 
             mCardView.setBackgroundColor(note.getColor());
             mImagesContainer.removeAllViews();
