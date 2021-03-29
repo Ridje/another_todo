@@ -107,5 +107,4 @@ public class Note extends Object {
         mTasks = new ArrayList<>();
         mImages = new ArrayList<>();
     }
-
 }
