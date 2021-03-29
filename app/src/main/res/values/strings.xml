@@ -5,4 +5,13 @@
     <string name="note_text">Text</string>
     <string name="task_text">Task text</string>
     <string name="note_modified_at">Modified at</string>
+    <string name="main_window">Notes</string>
+    <string name="navigation">Navigation</string>
+    <string name="open_navigation">Open navigation drawer</string>
+    <string name="close_navigation">Close navigation drawer</string>
+    <string name="favourite">Favourite</string>
+    <string name="settings">Settings</string>
+    <string name="help">Help</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
