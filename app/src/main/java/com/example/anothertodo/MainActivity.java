@@ -10,20 +10,21 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
-import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Button;
 
+import com.example.anothertodo.observer.NotelistHolder;
+import com.example.anothertodo.observer.NotelistHolderGetter;
+import com.example.anothertodo.observer.NotelistObserver;
 import com.example.anothertodo.ui.HelpFragment;
-import com.example.anothertodo.ui.NoteFragment;
 import com.example.anothertodo.ui.NoteListFragment;
 import com.example.anothertodo.ui.SettingsFragment;
 import com.google.android.material.navigation.NavigationView;
 
-public class MainActivity extends AppCompatActivity {
-    Toolbar mHeaderToolbar;
+public class MainActivity extends AppCompatActivity implements NotelistHolderGetter {
+    Toolbar mActionBar;
+    private NotelistHolder publisher = new NotelistHolder();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,30 +35,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.header_bar, menu);
+        getMenuInflater().inflate(R.menu.action_bar_menu, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        int id = item.getItemId();
-        switch (id) {
-            case R.id.add_new_note:
-
-                return true;
-        }
         return false;
     }
 
     private void initView() {
-        initHeaderToolbar();
+        initActionBar();
         initNavigationBar();
     }
 
-    private void initHeaderToolbar() {
-        mHeaderToolbar = findViewById(R.id.header_toolbar);
-        setSupportActionBar(mHeaderToolbar);
+    private void initActionBar() {
+        mActionBar = findViewById(R.id.action_bar);
+        setSupportActionBar(mActionBar);
     }
 
     private void initDefaultFragment() {
@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
     private void initNavigationBar() {
         final DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, mHeaderToolbar, R.string.open_navigation, R.string.close_navigation);
+                this, drawer, mActionBar, R.string.open_navigation, R.string.close_navigation);
         drawer.addDrawerListener(toggle);
 
         NavigationView navigationMenu = drawer.findViewById(R.id.navigation_view);
@@ -87,25 +87,38 @@ public class MainActivity extends AppCompatActivity {
         switch (id) {
             case R.id.navigation_main:
                 showFragment(new NoteListFragment());
+                setTitle(R.string.main_window);
                 return true;
             case R.id.navigation_favourite:
-                showFragment(new Fragment());
+                showFragment(NoteListFragment.newInstance(true));
+                setTitle(R.string.favourite);
                 return true;
             case R.id.navigation_settings:
                 showFragment(new SettingsFragment());
+                setTitle(R.string.settings);
                 return true;
             case R.id.navigaton_help:
                 showFragment(new HelpFragment());
+                setTitle(R.string.help);
                 return true;
         }
         return false;
     }
 
     private void showFragment(Fragment fragment) {
+        publisher.unsubscribeAll();
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.replace(R.id.note_list_container, fragment);
+        transaction.replace(R.id.frame_workflow, fragment);
+        transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
         transaction.commit();
+        if (fragment instanceof NoteListFragment) {
+            publisher.subscribe((NotelistObserver) fragment);
+        }
     }
 
+    @Override
+    public NotelistHolder getNotelistHolder() {
+        return publisher;
+    }
 }

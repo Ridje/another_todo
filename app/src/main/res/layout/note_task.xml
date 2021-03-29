@@ -1,10 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.checkbox.MaterialCheckBox xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/note_task_checkbox"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:includeFontPadding="false"
-    android:minHeight="0dp"
-    android:text="@string/task_text"
-    android:textAlignment="viewStart">
-</com.google.android.material.checkbox.MaterialCheckBox>
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="horizontal">
+
+    <com.google.android.material.checkbox.MaterialCheckBox
+        android:id="@+id/note_task_checkbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:includeFontPadding="false"
+        android:minHeight="0dp"></com.google.android.material.checkbox.MaterialCheckBox>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="5">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/note_task_text"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:background="@null"
+            android:includeFontPadding="false"
+            android:text="@string/task_text"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintVertical_weight="4"
+            app:layout_constraintEnd_toStartOf="@id/note_task_discard_changes"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"></com.google.android.material.textfield.TextInputEditText>
+        <ImageButton
+            android:id="@+id/note_task_discard_changes"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            app:layout_constraintVertical_weight="1"
+            android:background="@android:color/transparent"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:visibility="invisible">
+        </ImageButton>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <ImageButton
+        android:id="@+id/note_task_destroy_image_button"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="end"
+        android:background="@android:color/transparent"
+        android:src="@android:drawable/ic_menu_delete"
+        android:visibility="invisible" />
+</LinearLayout>
