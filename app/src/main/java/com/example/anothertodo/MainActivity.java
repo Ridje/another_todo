@@ -106,6 +106,7 @@ public class MainActivity extends AppCompatActivity implements NotelistHolderGet
     }
 
     private void showFragment(Fragment fragment) {
+        publisher.unsubscribeAll();
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction transaction = fragmentManager.beginTransaction();
         transaction.replace(R.id.frame_workflow, fragment);

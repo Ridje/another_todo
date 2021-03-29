@@ -21,6 +21,10 @@ public class NotelistHolder {
         observers.remove(observer);
     }
 
+    public void unsubscribeAll() {
+        observers.clear();
+    }
+
     public void notifyItemRemoved() {
         for (NotelistObserver observer : observers) {
             observer.notifyNotelistChanged();
