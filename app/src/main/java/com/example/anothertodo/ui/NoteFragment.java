@@ -27,6 +27,7 @@ import android.widget.ImageView;
 import com.example.anothertodo.MainActivity;
 import com.example.anothertodo.R;
 import com.example.anothertodo.Utils;
+import com.example.anothertodo.data.DataKeeper;
 import com.example.anothertodo.data.Note;
 import com.example.anothertodo.observer.NotelistHolder;
 import com.example.anothertodo.observer.NotelistHolderGetter;
@@ -40,6 +41,8 @@ import java.util.ArrayList;
 public class NoteFragment extends Fragment {
 
     private Note mNote;
+    private DataKeeper dataKeeper;
+
     private static TypedArray colorValues;
     private static TypedArray colorIcons;
 
@@ -60,10 +63,10 @@ public class NoteFragment extends Fragment {
     public NoteFragment() {
     }
 
-    public static NoteFragment newInstance(Integer noteID) {
+    public static NoteFragment newInstance(Integer notePosition) {
         NoteFragment fragment = new NoteFragment();
         Bundle args = new Bundle();
-        args.putInt(Utils.getKeyNoteElementHash(), noteID);
+        args.putInt(Utils.getKeyNoteId(), notePosition);
         fragment.setArguments(args);
         return fragment;
     }
@@ -71,8 +74,9 @@ public class NoteFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        dataKeeper = DataKeeper.getInstance(getResources());
         if (getArguments() != null) {
-            mNote = Utils.getNote(getResources(), (getArguments().getInt(Utils.getKeyNoteElementHash(), -1)));
+            mNote = dataKeeper.getNoteByKey(getArguments().getInt(Utils.getKeyNoteId()));
         }
         if (savedInstanceState != null && getResources().getConfiguration().orientation ==
                 Configuration.ORIENTATION_PORTRAIT) {
@@ -106,15 +110,18 @@ public class NoteFragment extends Fragment {
         mButtonAddTask.setOnClickListener(v -> {
             mNote.getTasks().add(mNote.new Task("", false));
             updateTasksView();
+            dataKeeper.updateNote(mNote);
         });
         mTitleView.setOnFocusChangeListener((v, hasFocus) -> {
             if (!hasFocus) {
                 updateTitle();
+                dataKeeper.updateNote(mNote);
             }
         });
         mTextView.setOnFocusChangeListener((v, hasFocus) -> {
             if (!hasFocus) {
                 updateText();
+                dataKeeper.updateNote(mNote);
             }
         });
 
@@ -154,14 +161,19 @@ public class NoteFragment extends Fragment {
             if (menuItems.get(i).equals(item)) {
                 mNote.setColor(colorValues.getColor(i, mNote.getColor()));
                 updateNoteViewBackgroundColor();
+                dataKeeper.updateNote(mNote);
                 mRootColorChoose.setIcon(colorIcons.getDrawable(i));
                 return true;
             }
         }
         if (item.getItemId() == R.id.menu_item_remove_note) {
-            Utils.removeNoteFromNotesList(getResources(), mNote);
+            dataKeeper.deleteNote(mNote);
             if (getResources().getConfiguration().orientation ==
                     Configuration.ORIENTATION_LANDSCAPE) {
+                FragmentManager fragmentManager = requireFragmentManager();
+                FragmentTransaction tr = fragmentManager.beginTransaction();
+                tr.remove(this);
+                tr.commit();
                 publisher.notifyItemRemoved();
             } else {
                 FragmentManager fragmentManager = requireFragmentManager();
@@ -225,7 +237,7 @@ public class NoteFragment extends Fragment {
             mTaskListContainer.removeViewAt(0);
         }
         for (int i = 0; i < mNote.getTasks().size(); i++) {
-            final int indexOfTask = i;
+            final Note.Task currentTask = mNote.getTasks().get(i);
             ViewGroup taskLine = (ViewGroup) getLayoutInflater().inflate(R.layout.note_task, mTaskListContainer, false);
             taskLine.setId(FrameLayout.generateViewId());
 
@@ -236,7 +248,7 @@ public class NoteFragment extends Fragment {
             final ImageButton discardChangedButton = taskLine.findViewById(R.id.note_task_discard_changes);
 
             TextInputEditText taskText = taskLine.findViewById(R.id.note_task_text);
-            taskText.setText(mNote.getTasks().get(indexOfTask).getText());
+            taskText.setText(currentTask.getText());
             taskText.setOnTouchListener((v, listener) -> {
                         discardChangedButton.setVisibility(View.VISIBLE);
                         return false;
@@ -246,13 +258,13 @@ public class NoteFragment extends Fragment {
             taskText.setOnFocusChangeListener((v, hasFocus) -> {
                 if (!hasFocus) {
                     discardChangedButton.setVisibility(View.INVISIBLE);
-                    mNote.getTasks().get(indexOfTask).setText(taskText.getText().toString());
+                    currentTask.setText(taskText.getText().toString());
                 }
             });
 
             discardChangedButton.setOnClickListener(v -> {
                 discardChangedButton.setVisibility(View.INVISIBLE);
-                taskText.setText(mNote.getTasks().get(indexOfTask).getText());
+                taskText.setText(currentTask.getText());
                 taskText.clearFocus();
             });
 
@@ -261,14 +273,14 @@ public class NoteFragment extends Fragment {
 
             taskCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 Utils.setFlagStrikeThroughText(taskText, isChecked);
-                mNote.getTasks().get(indexOfTask).setCompleted(isChecked);
+                currentTask.setCompleted(isChecked);
             });
 
             ImageButton destroyTaskButton = taskLine.findViewById(R.id.note_task_destroy_image_button);
 
             destroyTaskButton.setVisibility(View.VISIBLE);
             destroyTaskButton.setOnClickListener(v -> {
-                        removeTaskFromNote(mNote.getTasks().get(indexOfTask));
+                        removeTaskFromNote(currentTask);
                         mTaskListContainer.removeView(taskLine);
                     }
             );

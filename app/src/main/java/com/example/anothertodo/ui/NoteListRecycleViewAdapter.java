@@ -43,9 +43,6 @@ public class NoteListRecycleViewAdapter extends RecyclerView.Adapter{
         return new ViewHolder(view);
     }
 
-    public void changeSource(ArrayList<Note> newSource) {
-        this.mNotes = newSource;
-    }
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         ((ViewHolder) holder).bindViewHolder(mNotes.get(position));
@@ -60,12 +57,10 @@ public class NoteListRecycleViewAdapter extends RecyclerView.Adapter{
         this.itemClickListener = itemClickListener;
     }
 
-
     public interface OnItemClickListener {
         void onItemClick(View view , int position);
         void onLongItemClick(View view, int position);
     }
-
 
     public class ViewHolder extends RecyclerView.ViewHolder {
 
@@ -108,7 +103,7 @@ public class NoteListRecycleViewAdapter extends RecyclerView.Adapter{
 
             mTitle.setText(note.getTitle());
 
-            mHashCode.setText("#" + note.hashCode());
+            mHashCode.setText("#" + note.getID().toString());
 
             mCardView.setBackgroundColor(note.getColor());
             mImagesContainer.removeAllViews();

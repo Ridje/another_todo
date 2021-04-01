@@ -20,6 +20,9 @@ import android.view.ViewGroup;
 
 import com.example.anothertodo.R;
 import com.example.anothertodo.Utils;
+import com.example.anothertodo.data.DataKeeper;
+import com.example.anothertodo.data.DataSource;
+import com.example.anothertodo.data.LocalSource;
 import com.example.anothertodo.data.Note;
 import com.example.anothertodo.observer.NotelistObserver;
 
@@ -30,10 +33,9 @@ public class NoteListFragment extends Fragment implements NotelistObserver {
     private static final Integer COLUMN_NUMBER = 2;
     private boolean showFavouriteOnly = false;
     private Integer mSelectedNote = -1;
-    private Note mLastClickedNote = null;
     private RecyclerView mRecycleView;
-    private ArrayList<Note> mNotes;
     private NoteListRecycleViewAdapter mRecycleViewAdapter;
+    private DataKeeper dataSource;
 
 
     public NoteListFragment() {
@@ -58,6 +60,7 @@ public class NoteListFragment extends Fragment implements NotelistObserver {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        dataSource = DataKeeper.getInstance(getResources());
         if (getArguments() != null) {
             showFavouriteOnly = getArguments().getBoolean(Utils.getKeyShowFavouriteOnly(), false);
         }
@@ -66,7 +69,7 @@ public class NoteListFragment extends Fragment implements NotelistObserver {
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putInt(Utils.getKeyNoteElementHash(), mSelectedNote);
+        outState.putInt(Utils.getKeyNotePosition(), mSelectedNote);
     }
 
     // TODO: 22-Mar-21 Ask about use findViewByID before ViewCreated
@@ -75,7 +78,6 @@ public class NoteListFragment extends Fragment implements NotelistObserver {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_note_list, container, false);
         setHasOptionsMenu(true);
-        mNotes = Utils.getTestNotesList(getResources(), showFavouriteOnly);
         mRecycleView = rootView.findViewById(R.id.note_list_recycle_view);
         initRecycleView();
         return rootView;
@@ -86,18 +88,18 @@ public class NoteListFragment extends Fragment implements NotelistObserver {
         super.onViewCreated(view, savedInstanceState);
 
         if (savedInstanceState != null) {
-            mSelectedNote = savedInstanceState.getInt(Utils.getKeyNoteElementHash(), -1);
+            mSelectedNote = savedInstanceState.getInt(Utils.getKeyNotePosition(), -1);
         }
 
         if (getResources().getConfiguration().orientation ==
                 Configuration.ORIENTATION_LANDSCAPE) {
 
-            if ((mSelectedNote == -1 && !mNotes.isEmpty())) {
-                mSelectedNote = mNotes.get(0).hashCode();
+            if ((mSelectedNote == -1 && !dataSource.isEmpty())) {
+                mSelectedNote = 0;
             }
 
-            if (mSelectedNote >= 1) {
-                showAtTheEnd(Utils.getNote(getResources(), mSelectedNote));
+            if (mSelectedNote >= 0) {
+                showAtTheEnd(dataSource.getNoteByPosition(mSelectedNote));
             }
         }
 
@@ -118,20 +120,18 @@ public class NoteListFragment extends Fragment implements NotelistObserver {
     public boolean onContextItemSelected(@NonNull MenuItem item) {
         switch(item.getItemId()) {
             case R.id.context_action_delete:
-                if (mLastClickedNote != null) {
-                    mNotes.remove(mLastClickedNote);
+                if (mSelectedNote != -1) {
+                    dataSource.deleteNote(mSelectedNote);
                     mRecycleViewAdapter.notifyDataSetChanged();
-                    Utils.removeNoteFromNotesList(getResources(), mLastClickedNote);
-                    mLastClickedNote = null;
                     if (getResources().getConfiguration().orientation ==
                             Configuration.ORIENTATION_LANDSCAPE) {
 
-                        if (!mNotes.isEmpty()) {
-                            mSelectedNote = mNotes.get(0).hashCode();
+                        if (!dataSource.isEmpty()) {
+                            mSelectedNote = 0;
                         }
 
                         if (mSelectedNote >= 1) {
-                            showAtTheEnd(Utils.getNote(getResources(), mSelectedNote));
+                            showAtTheEnd(dataSource.getNoteByPosition(mSelectedNote));
                         }
                     }
                     return true;
@@ -147,12 +147,10 @@ public class NoteListFragment extends Fragment implements NotelistObserver {
         int id = item.getItemId();
         switch (id) {
             case R.id.add_new_note:
-                Note newNote = new Note(Utils.getNextNoteColor(getContext().getResources()));
-                mNotes.add(newNote);
-                int position = Utils.addNoteToTestNotesList(getContext().getResources(), newNote);
+                int position = dataSource.addNote();
                 mRecycleViewAdapter.notifyItemInserted(position);
                 mRecycleView.smoothScrollToPosition(position);
-                proceedClickOnNote(newNote);
+                proceedClickOnNote(dataSource.getNoteByPosition(position));
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -164,17 +162,19 @@ public class NoteListFragment extends Fragment implements NotelistObserver {
     private void initRecycleView() {
         final StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(COLUMN_NUMBER, StaggeredGridLayoutManager.VERTICAL);
         mRecycleView.setLayoutManager(layoutManager);
-        mRecycleViewAdapter = new NoteListRecycleViewAdapter(mNotes, this);
+        mRecycleViewAdapter = new NoteListRecycleViewAdapter(dataSource.getNotes(false), this);
         mRecycleView.setAdapter(mRecycleViewAdapter);
+        mRecycleView.getItemAnimator().setRemoveDuration(1000);
+        mRecycleView.getItemAnimator().setAddDuration(1000);
         mRecycleViewAdapter.setOnItemClickListener(new NoteListRecycleViewAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View view, int position) {
-                proceedClickOnNote(mNotes.get(position));
+                proceedClickOnNote(dataSource.getNoteByPosition(position));
             }
 
             @Override
             public void onLongItemClick(View view, int position) {
-                mLastClickedNote = mNotes.get(position);
+                mSelectedNote = position;
             }
         });
 
@@ -209,20 +209,20 @@ public class NoteListFragment extends Fragment implements NotelistObserver {
 
     @Override
     public void notifyNotelistChanged() {
-        mNotes = Utils.getTestNotesList(getResources(), showFavouriteOnly);
+        // TODO: 28-Mar-21 remove it after setting source of data - database
         if (getResources().getConfiguration().orientation ==
                 Configuration.ORIENTATION_LANDSCAPE) {
 
-            if (!mNotes.isEmpty()) {
-                mSelectedNote = mNotes.get(0).hashCode();
+            mSelectedNote = mSelectedNote - 1;
+
+            if ((mSelectedNote == -1 && !dataSource.isEmpty())) {
+                mSelectedNote = 0;
             }
 
-            if (mSelectedNote >= 1) {
-                showAtTheEnd(Utils.getNote(getResources(), mSelectedNote));
+            if (mSelectedNote >= 0) {
+                showAtTheEnd(dataSource.getNoteByPosition(mSelectedNote));
             }
         }
-        // TODO: 28-Mar-21 remove it after setting source of data - database 
-        mRecycleViewAdapter.changeSource(mNotes);
         mRecycleViewAdapter.notifyDataSetChanged();
     }
 }
