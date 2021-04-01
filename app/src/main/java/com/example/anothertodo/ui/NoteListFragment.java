@@ -60,7 +60,7 @@ public class NoteListFragment extends Fragment implements NotelistObserver {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        dataSource = DataKeeper.getInstance(getResources());
+        dataSource = DataKeeper.getInstance(getContext());
         if (getArguments() != null) {
             showFavouriteOnly = getArguments().getBoolean(Utils.getKeyShowFavouriteOnly(), false);
         }
@@ -164,8 +164,6 @@ public class NoteListFragment extends Fragment implements NotelistObserver {
         mRecycleView.setLayoutManager(layoutManager);
         mRecycleViewAdapter = new NoteListRecycleViewAdapter(dataSource.getNotes(false), this);
         mRecycleView.setAdapter(mRecycleViewAdapter);
-        mRecycleView.getItemAnimator().setRemoveDuration(1000);
-        mRecycleView.getItemAnimator().setAddDuration(1000);
         mRecycleViewAdapter.setOnItemClickListener(new NoteListRecycleViewAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View view, int position) {

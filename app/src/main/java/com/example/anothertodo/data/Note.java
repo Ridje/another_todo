@@ -22,6 +22,9 @@ public class Note extends Object implements Parcelable {
     Integer mColor;
     Integer mID;
 
+    public Date getCreatedAt() {
+        return mCreatedAt;
+    }
 
     private static volatile AtomicInteger maxID = new AtomicInteger(0);
 
@@ -41,6 +44,26 @@ public class Note extends Object implements Parcelable {
         } else {
             mID = in.readInt();
         }
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.mCreatedAt = createdAt;
+    }
+
+    public void setModifiedAt(Date modifiedAt) {
+        this.mModifiedAt = modifiedAt;
+    }
+
+    public void setPinned(Boolean pinned) {
+        this.mPinned = pinned;
+    }
+
+    public void setID(Integer ID) {
+        this.mID = ID;
+    }
+
+    public Note() {
+
     }
 
     public static final Creator<Note> CREATOR = new Creator<Note>() {

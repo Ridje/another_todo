@@ -74,7 +74,7 @@ public class NoteFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        dataKeeper = DataKeeper.getInstance(getResources());
+        dataKeeper = DataKeeper.getInstance(getContext());
         if (getArguments() != null) {
             mNote = dataKeeper.getNoteByKey(getArguments().getInt(Utils.getKeyNoteId()));
         }

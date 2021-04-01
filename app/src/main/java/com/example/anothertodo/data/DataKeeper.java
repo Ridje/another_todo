@@ -1,6 +1,8 @@
 package com.example.anothertodo.data;
 
-import android.content.res.Resources;
+import android.content.Context;
+
+import com.example.anothertodo.Preferences;
 
 import java.util.ArrayList;
 
@@ -8,12 +10,12 @@ public class DataKeeper implements DataSource {
     private static DataKeeper sInstance;
     private DataSource dataSource;
 
-    public static DataKeeper getInstance(Resources resources) {
+    public static DataKeeper getInstance(Context context) {
         DataKeeper instance = sInstance;
         if (instance == null) {
             synchronized (DataKeeper.class) {
                 if (sInstance == null) {
-                    instance = new DataKeeper(resources);
+                    instance = new DataKeeper(context);
                     sInstance = instance;
                 }
             }
@@ -21,8 +23,13 @@ public class DataKeeper implements DataSource {
         return instance;
     }
 
-    private DataKeeper(Resources resources) {
-        dataSource = new LocalSource(resources);
+    private DataKeeper(Context context) {
+        Preferences settings = Preferences.getInstance(context);
+        if (settings.read(Preferences.getKeySettingsUseCloud(), false)) {
+            dataSource = new CloudSource();
+        } else {
+            dataSource = new LocalSource(context.getResources());
+        }
     }
 
     @Override
