@@ -11,40 +11,22 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class Note extends Object implements Parcelable {
+public class Note {
 
     Date mCreatedAt, mModifiedAt;
     String mText;
     String mTitle;
-    ArrayList<Task> mTasks;
-    ArrayList<Bitmap> mImages;
+    ArrayList<Task> mTasks = new ArrayList<>();
+    ArrayList<Bitmap> mImages = new ArrayList<>();
     Boolean mPinned;
     Integer mColor;
-    Integer mID;
+    String mID;
 
     public Date getCreatedAt() {
         return mCreatedAt;
     }
 
     private static volatile AtomicInteger maxID = new AtomicInteger(0);
-
-    protected Note(Parcel in) {
-        mText = in.readString();
-        mTitle = in.readString();
-        mImages = in.createTypedArrayList(Bitmap.CREATOR);
-        byte tmpMPinned = in.readByte();
-        mPinned = tmpMPinned == 0 ? null : tmpMPinned == 1;
-        if (in.readByte() == 0) {
-            mColor = null;
-        } else {
-            mColor = in.readInt();
-        }
-        if (in.readByte() == 0) {
-            mID = null;
-        } else {
-            mID = in.readInt();
-        }
-    }
 
     public void setCreatedAt(Date createdAt) {
         this.mCreatedAt = createdAt;
@@ -58,27 +40,46 @@ public class Note extends Object implements Parcelable {
         this.mPinned = pinned;
     }
 
-    public void setID(Integer ID) {
+    public void setID(String ID) {
         this.mID = ID;
     }
 
     public Note() {
+        this.mID = Note.getNewID();
+        this.mCreatedAt = new Date(System.currentTimeMillis());
+        this.mModifiedAt = this.mCreatedAt;
+        this.mTitle = "";
+        this.mText = "";
+        this.mPinned = false;
+        this.mColor = Utils.getNextNoteColor();
+    }
+
+    public Note(String title, String text, Integer tasksCount, Integer imagesCount, Boolean pinned, Integer color) {
+        this.mID = Note.getNewID();
+        this.mCreatedAt = new Date(System.currentTimeMillis());
+        this.mModifiedAt = this.mCreatedAt;
+        this.mTitle = title;
+        this.mText = text;
+        this.mPinned = pinned;
+        this.mColor = color;
+
+        for (int i = 0; i < tasksCount; i++) {
+            mTasks.add(new Task(String.format("%s task", i), i % 2 == 0));
+        }
 
     }
 
-    public static final Creator<Note> CREATOR = new Creator<Note>() {
-        @Override
-        public Note createFromParcel(Parcel in) {
-            return new Note(in);
-        }
+    public Note(Integer color) {
+        this.mID = Note.getNewID();
+        this.mCreatedAt = new Date(System.currentTimeMillis());
+        this.mModifiedAt = this.mCreatedAt;
+        this.mTitle = "";
+        this.mText = "";
+        this.mPinned = false;
+        this.mColor = color;
+    }
 
-        @Override
-        public Note[] newArray(int size) {
-            return new Note[size];
-        }
-    };
-
-    public Integer getID() {
+    public String getID() {
         return mID;
     }
 
@@ -94,8 +95,8 @@ public class Note extends Object implements Parcelable {
         mModifiedAt = new Date(System.currentTimeMillis());
     }
 
-    public synchronized static Integer getNewID() {
-        return maxID.incrementAndGet();
+    public synchronized static String getNewID() {
+        return String.valueOf(maxID.incrementAndGet());
     }
 
     public void setColor(Integer mColor) {
@@ -130,31 +131,6 @@ public class Note extends Object implements Parcelable {
         return mTasks;
     }
 
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(mText);
-        dest.writeString(mTitle);
-        dest.writeTypedList(mImages);
-        dest.writeByte((byte) (mPinned == null ? 0 : mPinned ? 1 : 2));
-        if (mColor == null) {
-            dest.writeByte((byte) 0);
-        } else {
-            dest.writeByte((byte) 1);
-            dest.writeInt(mColor);
-        }
-        if (mID == null) {
-            dest.writeByte((byte) 0);
-        } else {
-            dest.writeByte((byte) 1);
-            dest.writeInt(mID);
-        }
-    }
-
     public class Task {
         String mText;
         boolean mCompleted;
@@ -183,35 +159,6 @@ public class Note extends Object implements Parcelable {
             this.mText = text;
             this.mCompleted = completed;
         }
-    }
-
-    public Note(String title, String text, Integer tasksCount, Integer imagesCount, Boolean pinned, Integer color) {
-        this.mID = Note.getNewID();
-        this.mCreatedAt = new Date(System.currentTimeMillis());
-        this.mModifiedAt = this.mCreatedAt;
-        this.mTitle = title;
-        this.mText = text;
-        this.mPinned = pinned;
-        this.mColor = color;
-
-        mTasks = new ArrayList<>();
-        for (int i = 0; i < tasksCount; i++) {
-            mTasks.add(new Task(String.format("%s task", i), i % 2 == 0));
-        }
-
-        mImages = new ArrayList<>();
-    }
-
-    public Note(Integer color) {
-        this.mID = Note.getNewID();
-        this.mCreatedAt = new Date(System.currentTimeMillis());
-        this.mModifiedAt = this.mCreatedAt;
-        this.mTitle = "";
-        this.mText = "";
-        this.mPinned = false;
-        this.mColor = color;
-        mTasks = new ArrayList<>();
-        mImages = new ArrayList<>();
     }
 
 }

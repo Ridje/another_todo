@@ -1,12 +1,10 @@
 package com.example.anothertodo.data;
 
-import android.graphics.Color;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
@@ -14,15 +12,33 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+
 public class CloudSource implements DataSource{
+
+    private static final ArrayList<DataChangedListener> changesListeners = new ArrayList<>();
+
+    @Override
+    public void addListener(DataChangedListener listener) {
+        changesListeners.add(listener);
+    }
+
+    @Override
+    public void removeListener(DataChangedListener listener) {
+        changesListeners.add(listener);
+    }
 
     public enum Fields{
         Title("Title"), Text("Text"), CreatedAt("CreatedAt"), ModifiedAt("ModifiedAt"),
-        Pinned("Pinned"), Color("Color"), ID("ID");
+        Pinned("Pinned"), Color("Color"), ID("ID"),
+
+        TaskCompleted("Completed"), TaskText("Text");
+
+
 
         private String dbFieldName;
         Fields(String dbFieldName) {
@@ -35,17 +51,34 @@ public class CloudSource implements DataSource{
 
         public static Note toNote(String id, Map<String, Object> doc) {
             Note note = new Note();
-            note.setTitle((String) doc.get(Fields.Title.toString()));
-            note.setText((String) doc.get(Fields.Text.toString()));
-            note.setModifiedAt(((Timestamp) doc.get(Fields.ModifiedAt.toString())).toDate());
-            note.setCreatedAt(((Timestamp) doc.get(Fields.CreatedAt.toString())).toDate());
-            note.setPinned((Boolean) doc.get(Fields.Pinned.toString()));
-            note.setColor(((Long) doc.get(Fields.Color.toString())).intValue());
-            note.setID(Integer.parseInt(id));
+            if (doc.get(Fields.Title.toString()) != null) {
+                note.setTitle((String) doc.get(Fields.Title.toString()));
+            }
+            if (doc.get(Fields.Text.toString()) != null) {
+                note.setText((String) doc.get(Fields.Text.toString()));
+            }
+            if (doc.get(Fields.ModifiedAt.toString()) != null) {
+                note.setModifiedAt(((Timestamp) doc.get(Fields.ModifiedAt.toString())).toDate());
+            }
+            if (doc.get(Fields.CreatedAt.toString()) != null) {
+                note.setCreatedAt(((Timestamp) doc.get(Fields.CreatedAt.toString())).toDate());
+            }
+            if (doc.get(Fields.Pinned.toString()) != null) {
+                note.setPinned((Boolean) doc.get(Fields.Pinned.toString()));
+            }
+            if (doc.get(Fields.Color.toString()) != null) {
+                note.setColor(((Long) doc.get(Fields.Color.toString())).intValue());
+            }
+            note.setID(id);
             return note;
         }
 
-        public static Map<String, Object> toDocument(Note note) {
+        public static Note.Task toTask(Note note, Map<String, Object> doc) {
+            Note.Task task = note.new Task((String) doc.get(Fields.TaskText), (Boolean) doc.get(Fields.TaskCompleted));
+            return task;
+        }
+
+        public static Map<String, Object> toDocumentNote(Note note) {
             Map<String, Object> doc = new HashMap<>();
             doc.put(Fields.Title.toString(), note.getTitle());
             doc.put(Fields.Text.toString(), note.getText());
@@ -55,64 +88,139 @@ public class CloudSource implements DataSource{
             doc.put(Fields.Color.toString(), note.getColor());
             return doc;
         }
+
+        public static Map<String, Object> toDocumentNoteTask(Note.Task task) {
+            Map<String, Object> doc = new HashMap<>();
+            doc.put(Fields.TaskText.toString(), task.getText());
+            doc.put(Fields.TaskCompleted.toString(), task.isCompleted());
+            return doc;
+        }
     }
 
 
     private static final String KEY_NOTES_COLLECTION = "Firestore.NotesCollection";
+    private static final String KEY_TASKS_BLUESCREEN_COLLECTION = "Firestore.NotesCollection/%s/tasks";
     private final FirebaseFirestore connector = FirebaseFirestore.getInstance();
     private final ArrayList<Note> notes = new ArrayList<>();
     private final CollectionReference referenceNotes = connector.collection(KEY_NOTES_COLLECTION);
 
     CloudSource() {
 
-        referenceNotes.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                if (task.isSuccessful()) {
-                    notes.clear();
-                    for (QueryDocumentSnapshot document : task.getResult()) {
-                        Map<String, Object> doc = document.getData();
-                        notes.add(Fields.toNote(document.getId(), doc));
-                    }
+        referenceNotes.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                notes.clear();
+                for (QueryDocumentSnapshot document : task.getResult()) {
+                    Map<String, Object> doc = document.getData();
+                    Note newNote = Fields.toNote(document.getId(), doc);
+
+                    CollectionReference referenceNoteTasks = connector.collection(String.format(KEY_TASKS_BLUESCREEN_COLLECTION, document.getId()));
+                    referenceNoteTasks.get().addOnCompleteListener(task1 -> {
+                        if (task1.isSuccessful()) {
+                            newNote.mTasks.clear();
+                            for (QueryDocumentSnapshot taskDoc : task1.getResult()) {
+                                Map<String, Object> noteTask = taskDoc.getData();
+                                    newNote.mTasks.add(newNote.new Task((String) noteTask.get("Text"), (Boolean) noteTask.get("Completed")));
+                            }
+                        }
+
+                    });
+                    notes.add(newNote);
+                }
+
+                for (int i = 0; i < changesListeners.size(); i++) {
+                    changesListeners.get(i).onDataSetChanged();
                 }
             }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Log.d("[CONNECTION TO FIRESTORE]", "get failed with ", e);
-            }
+        }).addOnFailureListener(e -> Log.d("[CONNECTION_TO_FIRESTORE]", "get failed with ", e));
+
+    }
+
+    @Override
+    public Note getNoteByKey(String key) {
+        return notes.stream().filter(note -> note.getID().equals(key)).findFirst().get();
+    }
+
+    @Override
+    public Note getNoteByPosition(int position) {
+        return notes.get(position);
+    }
+
+    @Override
+    public void deleteNote(int position) {
+        referenceNotes.document(notes.get(position).getID()).delete().addOnSuccessListener(unused -> {
+            notes.remove(position);
+            CollectionReference referenceNoteTasks = connector.collection(String.format(KEY_TASKS_BLUESCREEN_COLLECTION, notes.get(position).getID()));
+            referenceNoteTasks.get().addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+                        referenceNoteTasks.document(document.getId()).delete();
+                    }
+                    for (int i = 0; i < changesListeners.size(); i++) {
+                        changesListeners.get(i).onItemRemoved(position);
+                    }
+                }
+            });
         });
 
     }
 
     @Override
-    public Note getNoteByKey(int key) {
-        return null;
-    }
-
-    @Override
-    public Note getNoteByPosition(int position) {
-        return null;
-    }
-
-    @Override
-    public void deleteNote(int position) {
-
-    }
-
-    @Override
     public void deleteNote(Note note) {
+        int indexOfRemoved = notes.indexOf(note);
+        referenceNotes.document(note.getID()).delete().addOnSuccessListener(unused -> {
+            notes.remove(note);
+            CollectionReference referenceNoteTasks = connector.collection(String.format(KEY_TASKS_BLUESCREEN_COLLECTION, note.getID()));
+            referenceNoteTasks.get().addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+                        referenceNoteTasks.document(document.getId()).delete();
+                    }
+                    for (int i = 0; i < changesListeners.size(); i++) {
+                        changesListeners.get(i).onItemRemoved(indexOfRemoved);
+                    }
+                }
+            });
+
+        });
 
     }
 
     @Override
     public void updateNote(Note noteData) {
+        int indexOfUpdated = notes.indexOf(noteData);
+        referenceNotes.document(noteData.getID()).update(Fields.toDocumentNote(noteData)).addOnSuccessListener(unused -> {
+            CollectionReference referenceNoteTasks = connector.collection(String.format(KEY_TASKS_BLUESCREEN_COLLECTION, noteData.getID()));
+            referenceNoteTasks.get().addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+                        referenceNoteTasks.document(document.getId()).delete();
+                    }
+                    for (int i = 0; i < noteData.mTasks.size(); i++) {
+                        referenceNoteTasks.add(Fields.toDocumentNoteTask(noteData.mTasks.get(i)));
+                    }
+                    for (int i = 0; i < changesListeners.size(); i++) {
+                        changesListeners.get(i).onItemUpdated(indexOfUpdated);
+                    }
+                }
+            });
+            for (int i = 0; i < changesListeners.size(); i++) {
+                changesListeners.get(i).onItemUpdated(indexOfUpdated);
+            }
+        });
+
 
     }
 
     @Override
-    public int addNote() {
-        return 0;
+    public void addNote() {
+        Note noteToAdd = new Note();
+        referenceNotes.add(Fields.toDocumentNote(noteToAdd)).addOnSuccessListener(documentReference -> {
+            noteToAdd.setID(documentReference.getId());
+            notes.add(noteToAdd);
+            for (int i = 0; i < changesListeners.size(); i++) {
+                changesListeners.get(i).onItemAdded(notes.size() - 1);
+            }
+        });
     }
 
     @Override
@@ -122,6 +230,6 @@ public class CloudSource implements DataSource{
 
     @Override
     public boolean isEmpty() {
-        return false;
+        return notes.isEmpty();
     }
 }

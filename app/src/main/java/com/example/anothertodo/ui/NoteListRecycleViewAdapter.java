@@ -77,7 +77,6 @@ public class NoteListRecycleViewAdapter extends RecyclerView.Adapter{
             super(itemView);
             mCardView = itemView.findViewById(R.id.note_card_view);
             mTitle = itemView.findViewById(R.id.note_title);
-            mHashCode = itemView.findViewById(R.id.note_hashcode);
             mImagesContainer = itemView.findViewById((R.id.note_images_list));
             mTasksContainer = itemView.findViewById((R.id.note_tasks_list));
             mText = itemView.findViewById((R.id.note_text));
@@ -102,8 +101,6 @@ public class NoteListRecycleViewAdapter extends RecyclerView.Adapter{
         void bindViewHolder(Note note) {
 
             mTitle.setText(note.getTitle());
-
-            mHashCode.setText("#" + note.getID().toString());
 
             mCardView.setBackgroundColor(note.getColor());
             mImagesContainer.removeAllViews();

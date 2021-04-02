@@ -9,6 +9,7 @@ import java.util.ArrayList;
 public class DataKeeper implements DataSource {
     private static DataKeeper sInstance;
     private DataSource dataSource;
+    private static final ArrayList<DataChangedListener> changesListeners = new ArrayList<>();
 
     public static DataKeeper getInstance(Context context) {
         DataKeeper instance = sInstance;
@@ -23,6 +24,15 @@ public class DataKeeper implements DataSource {
         return instance;
     }
 
+    public void updateDataSource(Context context) {
+        Preferences settings = Preferences.getInstance(context);
+        if (settings.read(Preferences.getKeySettingsUseCloud(), false)) {
+            dataSource = new CloudSource();
+        } else {
+            dataSource = new LocalSource(context.getResources());
+        }
+    }
+
     private DataKeeper(Context context) {
         Preferences settings = Preferences.getInstance(context);
         if (settings.read(Preferences.getKeySettingsUseCloud(), false)) {
@@ -33,7 +43,7 @@ public class DataKeeper implements DataSource {
     }
 
     @Override
-    public Note getNoteByKey(int ID) {
+    public Note getNoteByKey(String ID) {
         return dataSource.getNoteByKey(ID);
     }
 
@@ -58,8 +68,8 @@ public class DataKeeper implements DataSource {
     }
 
     @Override
-    public int addNote() {
-        return dataSource.addNote();
+    public void addNote() {
+        dataSource.addNote();
     }
 
     @Override
@@ -70,5 +80,15 @@ public class DataKeeper implements DataSource {
     @Override
     public boolean isEmpty() {
         return dataSource.isEmpty();
+    }
+
+    @Override
+    public void addListener(DataChangedListener listener) {
+        dataSource.addListener(listener);
+    }
+
+    @Override
+    public void removeListener(DataChangedListener listener) {
+        dataSource.removeListener(listener);
     }
 }

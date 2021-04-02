@@ -1,6 +1,5 @@
 package com.example.anothertodo.ui;
 
-import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.graphics.Color;
@@ -24,13 +23,10 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 
-import com.example.anothertodo.MainActivity;
 import com.example.anothertodo.R;
 import com.example.anothertodo.Utils;
 import com.example.anothertodo.data.DataKeeper;
 import com.example.anothertodo.data.Note;
-import com.example.anothertodo.observer.NotelistHolder;
-import com.example.anothertodo.observer.NotelistHolderGetter;
 import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textview.MaterialTextView;
@@ -45,8 +41,6 @@ public class NoteFragment extends Fragment {
 
     private static TypedArray colorValues;
     private static TypedArray colorIcons;
-
-    private NotelistHolder publisher;
 
     private ArrayList<MenuItem> menuItems = new ArrayList<>();
     private SubMenu mRootColorChoose;
@@ -63,10 +57,10 @@ public class NoteFragment extends Fragment {
     public NoteFragment() {
     }
 
-    public static NoteFragment newInstance(Integer notePosition) {
+    public static NoteFragment newInstance(String notePosition) {
         NoteFragment fragment = new NoteFragment();
         Bundle args = new Bundle();
-        args.putInt(Utils.getKeyNoteId(), notePosition);
+        args.putString(Utils.getKeyNoteId(), notePosition);
         fragment.setArguments(args);
         return fragment;
     }
@@ -76,7 +70,7 @@ public class NoteFragment extends Fragment {
         super.onCreate(savedInstanceState);
         dataKeeper = DataKeeper.getInstance(getContext());
         if (getArguments() != null) {
-            mNote = dataKeeper.getNoteByKey(getArguments().getInt(Utils.getKeyNoteId()));
+            mNote = dataKeeper.getNoteByKey(getArguments().getString(Utils.getKeyNoteId()));
         }
         if (savedInstanceState != null && getResources().getConfiguration().orientation ==
                 Configuration.ORIENTATION_PORTRAIT) {
@@ -89,18 +83,11 @@ public class NoteFragment extends Fragment {
     }
 
     @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-        publisher = ((NotelistHolderGetter) context).getNotelistHolder();
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
         ViewGroup fragmentRoot = (ViewGroup) inflater.inflate(R.layout.fragment_note, container, false);
         mNoteElementView = (ViewGroup) inflater.inflate(R.layout.note_edit, fragmentRoot, true);
-        mHashCodeView = mNoteElementView.findViewById(R.id.note_hashcode);
         mTitleView = mNoteElementView.findViewById(R.id.note_title);
         mImageListContainer = mNoteElementView.findViewById(R.id.note_images_list);
         mTaskListContainer = mNoteElementView.findViewById(R.id.note_tasks_list);
@@ -174,7 +161,6 @@ public class NoteFragment extends Fragment {
                 FragmentTransaction tr = fragmentManager.beginTransaction();
                 tr.remove(this);
                 tr.commit();
-                publisher.notifyItemRemoved();
             } else {
                 FragmentManager fragmentManager = requireFragmentManager();
                 fragmentManager.popBackStack();
@@ -184,11 +170,6 @@ public class NoteFragment extends Fragment {
         }
 
         return true;
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
     }
 
     @Override
@@ -206,7 +187,6 @@ public class NoteFragment extends Fragment {
 
     private void updateViewFromDataSource() {
         updateTitleView();
-        updateHashCodeView();
         updateImagesView();
         updateTasksView();
         updateTextView();
@@ -216,10 +196,6 @@ public class NoteFragment extends Fragment {
 
     private void updateTitleView() {
         mTitleView.setText(mNote.getTitle());
-    }
-
-    private void updateHashCodeView() {
-        mHashCodeView.setText("#" + mNote.getID().toString());
     }
 
     private void updateImagesView() {
@@ -259,6 +235,7 @@ public class NoteFragment extends Fragment {
                 if (!hasFocus) {
                     discardChangedButton.setVisibility(View.INVISIBLE);
                     currentTask.setText(taskText.getText().toString());
+                    dataKeeper.updateNote(mNote);
                 }
             });
 
@@ -274,6 +251,7 @@ public class NoteFragment extends Fragment {
             taskCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
                 Utils.setFlagStrikeThroughText(taskText, isChecked);
                 currentTask.setCompleted(isChecked);
+                dataKeeper.updateNote(mNote);
             });
 
             ImageButton destroyTaskButton = taskLine.findViewById(R.id.note_task_destroy_image_button);
@@ -282,6 +260,7 @@ public class NoteFragment extends Fragment {
             destroyTaskButton.setOnClickListener(v -> {
                         removeTaskFromNote(currentTask);
                         mTaskListContainer.removeView(taskLine);
+                        dataKeeper.updateNote(mNote);
                     }
             );
             mTaskListContainer.addView(taskLine, mTaskListContainer.getChildCount() - 1);

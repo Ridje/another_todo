@@ -9,28 +9,17 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <androidx.appcompat.widget.LinearLayoutCompat
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/note_title"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="horizontal">
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/note_hashcode"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:text="#0"/>
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/note_title"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_margin="@dimen/margin_base_1x"
-                android:freezesText="true"
-                android:gravity="center|top"
-                android:text="@string/note_title"
-                android:textSize="@dimen/note_title_size"
-                android:textStyle="bold"/>
-        </androidx.appcompat.widget.LinearLayoutCompat>
-
-
+            android:layout_margin="@dimen/margin_base_1x"
+            android:freezesText="true"
+            android:gravity="center|top"
+            android:text="@string/note_title"
+            android:textSize="@dimen/note_title_size"
+            android:textStyle="bold" />
 
         <androidx.appcompat.widget.LinearLayoutCompat
             android:id="@+id/note_images_list"

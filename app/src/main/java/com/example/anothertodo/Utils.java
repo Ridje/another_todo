@@ -22,6 +22,7 @@ import com.google.android.material.checkbox.MaterialCheckBox;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class Utils {
@@ -31,6 +32,9 @@ public class Utils {
     private static final String KEY_CURRENT_SCROLL_POSITION = "NoteList.CurrentScrollPosition";
     private static final String KEY_NOTE_ELEMENT = "NoteFrame.NoteElement";
     private static final String KEY_NOTE_ID = "NoteFrame.NoteID";
+
+    private static AtomicInteger currentColorNumber = new AtomicInteger(0);
+    private static int[] androidColors;
 
     public static String getKeyNoteId() {
         return KEY_NOTE_ID;
@@ -52,13 +56,11 @@ public class Utils {
         return KEY_CURRENT_SCROLL_POSITION;
     }
 
-
     public static String getDateTimeInLocalFormat(Context context, Date date) {
         DateFormat longDateFormat = android.text.format.DateFormat.getLongDateFormat(context);
         DateFormat timeFormat = android.text.format.DateFormat.getTimeFormat(context);
         return longDateFormat.format(date) + " " + timeFormat.format(date);
     }
-
 
     public static void setFlagStrikeThroughText(TextView textView, boolean isChecked) {
         if (isChecked) {
@@ -66,5 +68,17 @@ public class Utils {
         } else {
             textView.setPaintFlags(textView.getPaintFlags()  & (~Paint.STRIKE_THRU_TEXT_FLAG));
         }
+    }
+
+    public static void initColorsForNotes(Resources resources) {
+        androidColors = resources.getIntArray(R.array.android_colors);
+    }
+
+    public static int getNextNoteColor() {
+        if (androidColors == null) {
+            return Color.blue(255);
+        }
+        int result = androidColors[currentColorNumber.getAndIncrement() % androidColors.length];
+        return result;
     }
 }

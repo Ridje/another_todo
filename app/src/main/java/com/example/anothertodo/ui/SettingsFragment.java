@@ -14,6 +14,7 @@ import android.widget.Switch;
 
 import com.example.anothertodo.Preferences;
 import com.example.anothertodo.R;
+import com.example.anothertodo.data.DataKeeper;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
 /**
@@ -59,6 +60,7 @@ public class SettingsFragment extends Fragment {
         mSwitchUseCloud.setOnCheckedChangeListener((buttonView, isChecked) -> {
             mUseCloud = isChecked;
             settings.write(Preferences.getKeySettingsUseCloud(), mUseCloud);
+            DataKeeper.getInstance(getContext()).updateDataSource(getContext());
         }
         );
     }

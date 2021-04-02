@@ -20,15 +20,11 @@ import android.view.ViewGroup;
 
 import com.example.anothertodo.R;
 import com.example.anothertodo.Utils;
+import com.example.anothertodo.data.DataChangedListener;
 import com.example.anothertodo.data.DataKeeper;
-import com.example.anothertodo.data.DataSource;
-import com.example.anothertodo.data.LocalSource;
 import com.example.anothertodo.data.Note;
-import com.example.anothertodo.observer.NotelistObserver;
 
-import java.util.ArrayList;
-
-public class NoteListFragment extends Fragment implements NotelistObserver {
+public class NoteListFragment extends Fragment {
 
     private static final Integer COLUMN_NUMBER = 2;
     private boolean showFavouriteOnly = false;
@@ -36,9 +32,15 @@ public class NoteListFragment extends Fragment implements NotelistObserver {
     private RecyclerView mRecycleView;
     private NoteListRecycleViewAdapter mRecycleViewAdapter;
     private DataKeeper dataSource;
-
+    DataChangedListener thisListener;
 
     public NoteListFragment() {
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        dataSource.removeListener(thisListener);
     }
 
     public static NoteListFragment newInstance() {
@@ -61,6 +63,40 @@ public class NoteListFragment extends Fragment implements NotelistObserver {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         dataSource = DataKeeper.getInstance(getContext());
+        thisListener = new DataChangedListener() {
+            @Override
+            public void onItemAdded(int position) {
+                mRecycleViewAdapter.notifyItemInserted(position);
+                mRecycleView.smoothScrollToPosition(position);
+                proceedClickOnNote(dataSource.getNoteByPosition(position));
+            }
+
+            @Override
+            public void onItemRemoved(int position) {
+                mRecycleViewAdapter.notifyItemRemoved(position);
+                if (getResources().getConfiguration().orientation ==
+                        Configuration.ORIENTATION_LANDSCAPE) {
+                    if (!dataSource.isEmpty()) {
+                        mSelectedNote = 0;
+                    }
+
+                    if (mSelectedNote >= 0) {
+                        showAtTheEnd(dataSource.getNoteByPosition(mSelectedNote));
+                    }
+                }
+            }
+
+            @Override
+            public void onItemUpdated(int position) {
+            }
+
+            @Override
+            public void onDataSetChanged() {
+                mRecycleViewAdapter.notifyDataSetChanged();
+            }
+        };
+        dataSource.addListener(thisListener);
+
         if (getArguments() != null) {
             showFavouriteOnly = getArguments().getBoolean(Utils.getKeyShowFavouriteOnly(), false);
         }
@@ -122,18 +158,6 @@ public class NoteListFragment extends Fragment implements NotelistObserver {
             case R.id.context_action_delete:
                 if (mSelectedNote != -1) {
                     dataSource.deleteNote(mSelectedNote);
-                    mRecycleViewAdapter.notifyDataSetChanged();
-                    if (getResources().getConfiguration().orientation ==
-                            Configuration.ORIENTATION_LANDSCAPE) {
-
-                        if (!dataSource.isEmpty()) {
-                            mSelectedNote = 0;
-                        }
-
-                        if (mSelectedNote >= 1) {
-                            showAtTheEnd(dataSource.getNoteByPosition(mSelectedNote));
-                        }
-                    }
                     return true;
                 }
         }
@@ -147,10 +171,7 @@ public class NoteListFragment extends Fragment implements NotelistObserver {
         int id = item.getItemId();
         switch (id) {
             case R.id.add_new_note:
-                int position = dataSource.addNote();
-                mRecycleViewAdapter.notifyItemInserted(position);
-                mRecycleView.smoothScrollToPosition(position);
-                proceedClickOnNote(dataSource.getNoteByPosition(position));
+                dataSource.addNote();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -203,24 +224,5 @@ public class NoteListFragment extends Fragment implements NotelistObserver {
         transaction.replace(R.id.note_container, NoteFragment.newInstance(currentNote.getID()));
         transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
         transaction.commit();
-    }
-
-    @Override
-    public void notifyNotelistChanged() {
-        // TODO: 28-Mar-21 remove it after setting source of data - database
-        if (getResources().getConfiguration().orientation ==
-                Configuration.ORIENTATION_LANDSCAPE) {
-
-            mSelectedNote = mSelectedNote - 1;
-
-            if ((mSelectedNote == -1 && !dataSource.isEmpty())) {
-                mSelectedNote = 0;
-            }
-
-            if (mSelectedNote >= 0) {
-                showAtTheEnd(dataSource.getNoteByPosition(mSelectedNote));
-            }
-        }
-        mRecycleViewAdapter.notifyDataSetChanged();
     }
 }
