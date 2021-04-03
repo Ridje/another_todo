@@ -27,6 +27,7 @@ import com.example.anothertodo.R;
 import com.example.anothertodo.Utils;
 import com.example.anothertodo.data.DataKeeper;
 import com.example.anothertodo.data.Note;
+import com.example.anothertodo.data.OnDialogListener;
 import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textview.MaterialTextView;
@@ -34,7 +35,7 @@ import com.google.android.material.textview.MaterialTextView;
 import java.util.ArrayList;
 
 
-public class NoteFragment extends Fragment {
+public class NoteFragment extends Fragment implements OnDialogListener {
 
     private Note mNote;
     private DataKeeper dataKeeper;
@@ -154,17 +155,11 @@ public class NoteFragment extends Fragment {
             }
         }
         if (item.getItemId() == R.id.menu_item_remove_note) {
-            dataKeeper.deleteNote(mNote);
-            if (getResources().getConfiguration().orientation ==
-                    Configuration.ORIENTATION_LANDSCAPE) {
-                FragmentManager fragmentManager = requireFragmentManager();
-                FragmentTransaction tr = fragmentManager.beginTransaction();
-                tr.remove(this);
-                tr.commit();
-            } else {
-                FragmentManager fragmentManager = requireFragmentManager();
-                fragmentManager.popBackStack();
-            }
+            BottomDialogFragment dialogFragment =
+                    BottomDialogFragment.newInstance();
+            dialogFragment.setOnDialogListener(this);
+            dialogFragment.show(requireFragmentManager(),
+                    "dialog_fragment");
 
             return true;
         }
@@ -302,4 +297,23 @@ public class NoteFragment extends Fragment {
         updateModifiedAtView();
     }
 
+    @Override
+    public void resultDialogYes() {
+        dataKeeper.deleteNote(mNote);
+        if (getResources().getConfiguration().orientation ==
+                Configuration.ORIENTATION_LANDSCAPE) {
+            FragmentManager fragmentManager = requireFragmentManager();
+            FragmentTransaction tr = fragmentManager.beginTransaction();
+            tr.remove(this);
+            tr.commit();
+        } else {
+            FragmentManager fragmentManager = requireFragmentManager();
+            fragmentManager.popBackStack();
+        }
+    }
+
+    @Override
+    public void resultDialogNo() {
+
+    }
 }
