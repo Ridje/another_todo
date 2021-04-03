@@ -17,7 +17,7 @@ public class CloudSource implements DataSource{
 
     private static final ArrayList<DataChangedListener> changesListeners = new ArrayList<>();
     private static final String KEY_NOTES_COLLECTION = "Firestore.NotesCollection";
-    private static final String KEY_TASKS_BLUESCREEN_COLLECTION = "Firestore.NotesCollection%s/%s/tasks";
+    private static final String KEY_TASKS_BLUESCREEN_COLLECTION = "Firestore.NotesCollection.%s/%s/tasks";
     private final FirebaseFirestore connector = FirebaseFirestore.getInstance();
     private final ArrayList<Note> notes = new ArrayList<>();
     private CollectionReference referenceNotes;
