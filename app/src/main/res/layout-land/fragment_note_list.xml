@@ -14,5 +14,12 @@
             android:layout_height="match_parent">
         </androidx.recyclerview.widget.RecyclerView>
     </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/note_container"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1">
+    </FrameLayout>
 </LinearLayout>
 

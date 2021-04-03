@@ -4,18 +4,14 @@
     <item
         android:title="@string/main_window"
         android:id="@+id/navigation_main"
-        android:icon="@android:drawable/ic_menu_save"
+        android:icon="@android:drawable/ic_menu_today"
         android:orderInCategory="1"/>
     <item android:title="@string/favourite"
         android:id="@+id/navigation_favourite"
-        android:icon="@android:drawable/ic_menu_save"
+        android:icon="@android:drawable/star_big_on"
         android:orderInCategory="2"/>
-    <item android:title="@string/settings"
-        android:id="@+id/navigation_settings"
-        android:icon="@android:drawable/ic_menu_manage"
-        android:orderInCategory="3"/>
     <item android:title="@string/help"
         android:id="@+id/navigaton_help"
         android:icon="@android:drawable/ic_menu_help"
-        android:orderInCategory="4"/>
+        android:orderInCategory="3"/>
 </menu>
