@@ -1,5 +1,7 @@
 package com.example.anothertodo.ui;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
@@ -18,13 +20,14 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.example.anothertodo.Preferences;
 import com.example.anothertodo.R;
 import com.example.anothertodo.Utils;
 import com.example.anothertodo.data.DataChangedListener;
 import com.example.anothertodo.data.DataKeeper;
 import com.example.anothertodo.data.Note;
 
-public class NoteListFragment extends Fragment {
+public class NoteListFragment extends Fragment implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     private static final Integer COLUMN_NUMBER = 2;
     private boolean showFavouriteOnly = false;
@@ -41,6 +44,12 @@ public class NoteListFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         dataSource.removeListener(thisListener);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Preferences.getInstance(requireContext()).unregisterOnSharedPreferenceChangeListener(this);
     }
 
     public static NoteListFragment newInstance() {
@@ -62,6 +71,7 @@ public class NoteListFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Preferences.getInstance(requireContext()).registerOnSharedPreferenceChangeListener(this);
         dataSource = DataKeeper.getInstance(getContext());
         thisListener = new DataChangedListener() {
             @Override
@@ -224,5 +234,12 @@ public class NoteListFragment extends Fragment {
         transaction.replace(R.id.note_container, NoteFragment.newInstance(currentNote.getID()));
         transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
         transaction.commit();
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (key.equals(Preferences.getKeySettingsUseCloud())) {
+            dataSource.updateDataSource(requireContext());
+        }
     }
 }

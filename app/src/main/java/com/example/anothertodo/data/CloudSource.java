@@ -1,18 +1,13 @@
 package com.example.anothertodo.data;
 
+import android.security.keystore.UserNotAuthenticatedException;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,6 +16,12 @@ import java.util.Map;
 public class CloudSource implements DataSource{
 
     private static final ArrayList<DataChangedListener> changesListeners = new ArrayList<>();
+    private static final String KEY_NOTES_COLLECTION = "Firestore.NotesCollection";
+    private static final String KEY_TASKS_BLUESCREEN_COLLECTION = "Firestore.NotesCollection%s/%s/tasks";
+    private final FirebaseFirestore connector = FirebaseFirestore.getInstance();
+    private final ArrayList<Note> notes = new ArrayList<>();
+    private CollectionReference referenceNotes;
+    private String mUserName;
 
     @Override
     public void addListener(DataChangedListener listener) {
@@ -29,7 +30,7 @@ public class CloudSource implements DataSource{
 
     @Override
     public void removeListener(DataChangedListener listener) {
-        changesListeners.add(listener);
+        changesListeners.remove(listener);
     }
 
     public enum Fields{
@@ -37,7 +38,6 @@ public class CloudSource implements DataSource{
         Pinned("Pinned"), Color("Color"), ID("ID"),
 
         TaskCompleted("Completed"), TaskText("Text");
-
 
 
         private String dbFieldName;
@@ -98,14 +98,12 @@ public class CloudSource implements DataSource{
     }
 
 
-    private static final String KEY_NOTES_COLLECTION = "Firestore.NotesCollection";
-    private static final String KEY_TASKS_BLUESCREEN_COLLECTION = "Firestore.NotesCollection/%s/tasks";
-    private final FirebaseFirestore connector = FirebaseFirestore.getInstance();
-    private final ArrayList<Note> notes = new ArrayList<>();
-    private final CollectionReference referenceNotes = connector.collection(KEY_NOTES_COLLECTION);
-
-    CloudSource() {
-
+    CloudSource(String username) throws UserNotAuthenticatedException {
+        if (username == null) {
+            throw new UserNotAuthenticatedException();
+        }
+        mUserName = username;
+        referenceNotes = connector.collection(KEY_NOTES_COLLECTION + "." + mUserName);
         referenceNotes.get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 notes.clear();
@@ -113,7 +111,7 @@ public class CloudSource implements DataSource{
                     Map<String, Object> doc = document.getData();
                     Note newNote = Fields.toNote(document.getId(), doc);
 
-                    CollectionReference referenceNoteTasks = connector.collection(String.format(KEY_TASKS_BLUESCREEN_COLLECTION, document.getId()));
+                    CollectionReference referenceNoteTasks = connector.collection(String.format(KEY_TASKS_BLUESCREEN_COLLECTION, mUserName, document.getId()));
                     referenceNoteTasks.get().addOnCompleteListener(task1 -> {
                         if (task1.isSuccessful()) {
                             newNote.mTasks.clear();
@@ -149,7 +147,7 @@ public class CloudSource implements DataSource{
     public void deleteNote(int position) {
         referenceNotes.document(notes.get(position).getID()).delete().addOnSuccessListener(unused -> {
             notes.remove(position);
-            CollectionReference referenceNoteTasks = connector.collection(String.format(KEY_TASKS_BLUESCREEN_COLLECTION, notes.get(position).getID()));
+            CollectionReference referenceNoteTasks = connector.collection(String.format(KEY_TASKS_BLUESCREEN_COLLECTION, mUserName, notes.get(position).getID()));
             referenceNoteTasks.get().addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
                     for (QueryDocumentSnapshot document : task.getResult()) {
@@ -169,7 +167,7 @@ public class CloudSource implements DataSource{
         int indexOfRemoved = notes.indexOf(note);
         referenceNotes.document(note.getID()).delete().addOnSuccessListener(unused -> {
             notes.remove(note);
-            CollectionReference referenceNoteTasks = connector.collection(String.format(KEY_TASKS_BLUESCREEN_COLLECTION, note.getID()));
+            CollectionReference referenceNoteTasks = connector.collection(String.format(KEY_TASKS_BLUESCREEN_COLLECTION, mUserName, note.getID()));
             referenceNoteTasks.get().addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
                     for (QueryDocumentSnapshot document : task.getResult()) {
@@ -189,7 +187,7 @@ public class CloudSource implements DataSource{
     public void updateNote(Note noteData) {
         int indexOfUpdated = notes.indexOf(noteData);
         referenceNotes.document(noteData.getID()).update(Fields.toDocumentNote(noteData)).addOnSuccessListener(unused -> {
-            CollectionReference referenceNoteTasks = connector.collection(String.format(KEY_TASKS_BLUESCREEN_COLLECTION, noteData.getID()));
+            CollectionReference referenceNoteTasks = connector.collection(String.format(KEY_TASKS_BLUESCREEN_COLLECTION, mUserName, noteData.getID()));
             referenceNoteTasks.get().addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
                     for (QueryDocumentSnapshot document : task.getResult()) {

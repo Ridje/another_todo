@@ -11,6 +11,17 @@ public class Preferences {
     private static SharedPreferences sSharedPref;
     private static Preferences sInstance;
     private static final String KEY_SETTINGS_USE_CLOUD = "Setttings.UseCloud";
+    private static final String KEY_SETTINGS_USER_EMAIL = "Settings.UserEmal";
+    private static final String KEY_SETTINGS_USER_AVATAR = "Settings.UserAvatar";
+
+
+    public static String getKeySettingsUserAvatar() {
+        return KEY_SETTINGS_USER_AVATAR;
+    }
+
+    public static String getKeySettingsUserEmail() {
+        return KEY_SETTINGS_USER_EMAIL;
+    }
 
     public static String getKeySettingsUseCloud() {
         return KEY_SETTINGS_USE_CLOUD;
@@ -33,7 +44,6 @@ public class Preferences {
         return instance;
     }
 
-
     public String read(String key, String defValue) {
         return sSharedPref.getString(key, defValue);
     }
@@ -44,6 +54,20 @@ public class Preferences {
 
     public int read(String key, int defValue) {
         return sSharedPref.getInt(key, defValue);
+    }
+
+    public void removeSetting(String key) {
+        SharedPreferences.Editor prefsEditor = sSharedPref.edit();
+        prefsEditor.remove(key);
+        prefsEditor.commit();
+    }
+
+    public void registerOnSharedPreferenceChangeListener(SharedPreferences.OnSharedPreferenceChangeListener listener) {
+        sSharedPref.registerOnSharedPreferenceChangeListener(listener);
+    }
+
+    public void unregisterOnSharedPreferenceChangeListener(SharedPreferences.OnSharedPreferenceChangeListener listener) {
+        sSharedPref.unregisterOnSharedPreferenceChangeListener(listener);
     }
 
     public void write(String key, String value) {

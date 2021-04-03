@@ -1,15 +1,18 @@
 package com.example.anothertodo.data;
 
 import android.content.Context;
+import android.os.LocaleList;
+import android.security.keystore.UserNotAuthenticatedException;
+import android.util.Log;
 
 import com.example.anothertodo.Preferences;
 
 import java.util.ArrayList;
 
-public class DataKeeper implements DataSource {
+public class DataKeeper implements DataSource{
     private static DataKeeper sInstance;
     private DataSource dataSource;
-    private static final ArrayList<DataChangedListener> changesListeners = new ArrayList<>();
+    private static final String TAG = "[SourceProvider]";
 
     public static DataKeeper getInstance(Context context) {
         DataKeeper instance = sInstance;
@@ -21,14 +24,20 @@ public class DataKeeper implements DataSource {
                 }
             }
         }
+        instance.updateDataSource(context);
         return instance;
     }
 
     public void updateDataSource(Context context) {
         Preferences settings = Preferences.getInstance(context);
-        if (settings.read(Preferences.getKeySettingsUseCloud(), false)) {
-            dataSource = new CloudSource();
-        } else {
+        boolean useCloud = settings.read(Preferences.getKeySettingsUseCloud(), false);
+        if (useCloud && !(dataSource instanceof CloudSource)) {
+            try {
+                dataSource = new CloudSource(settings.read(Preferences.getKeySettingsUserEmail(), null));
+            } catch (UserNotAuthenticatedException e) {
+                Log.w(TAG, "Can't login, some problem with login in settings: " + e.getMessage());
+            }
+        } else if (!useCloud && !(dataSource instanceof LocalSource)) {
             dataSource = new LocalSource(context.getResources());
         }
     }
@@ -36,7 +45,11 @@ public class DataKeeper implements DataSource {
     private DataKeeper(Context context) {
         Preferences settings = Preferences.getInstance(context);
         if (settings.read(Preferences.getKeySettingsUseCloud(), false)) {
-            dataSource = new CloudSource();
+            try {
+                dataSource = new CloudSource(settings.read(Preferences.getKeySettingsUserEmail(), null));
+            } catch (UserNotAuthenticatedException e) {
+                Log.w(TAG, "Can't login, some problem with login in settings: " + e.getMessage());
+            }
         } else {
             dataSource = new LocalSource(context.getResources());
         }
