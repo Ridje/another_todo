@@ -7,11 +7,10 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
-import android.util.TimeFormatException;
+import android.util.Base64;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -21,55 +20,42 @@ import androidx.fragment.app.Fragment;
 import com.example.anothertodo.data.Note;
 import com.google.android.material.checkbox.MaterialCheckBox;
 
+import java.io.ByteArrayOutputStream;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class Utils {
 
-    private static ArrayList<Note> notesList;
-    private static int currentColorNumber = 0;
-    private static final String KEY_NOTE_ELEMENT = "NoteActivity.NoteElement";
+    private static final String KEY_NOTE_POSITION = "NoteFrame.NotePosition";
+    private static final String KEY_SHOW_FAVOURITE_ONLY = "NoteList.ShowFavouriteOnly";
+    private static final String KEY_CURRENT_SCROLL_POSITION = "NoteList.CurrentScrollPosition";
+    private static final String KEY_NOTE_ELEMENT = "NoteFrame.NoteElement";
+    private static final String KEY_NOTE_ID = "NoteFrame.NoteID";
 
-    public static ArrayList<Note> getTestNotesList(Resources resources) {
+    private static AtomicInteger currentColorNumber = new AtomicInteger(0);
+    private static int[] androidColors;
 
-        initializeNotesList(resources);
-        return notesList;
-    }
-
-    public static Note getNote(Resources resources, Integer hashCode) {
-        initializeNotesList(resources);
-        for (Note e: notesList) {
-            if (e.hashCode() == hashCode) return e;
-        }
-        return new Note(getNextNoteColor(resources));
-    }
-
-    private static void initializeNotesList(Resources resources) {
-        if (notesList == null) {
-            Bitmap defaultImage = BitmapFactory.decodeResource(resources, R.drawable.no_photo);
-            notesList = new ArrayList<Note>(){{
-                add(new Note("Fix machine", "You could argue that in agreeing to participate in an HBO documentary called Monica in Black and White I had signed up to be shamed and publicly humiliated yet again.", 0, 2, defaultImage, false, getNextNoteColor(resources)));
-                add(new Note("Exchange money", "Don't forget to exchange a money", 0, 0, defaultImage, false, getNextNoteColor(resources)));
-                add(new Note("Take kids", "Production of the S-10 was ended as part of Rans' extensive reorganization of its product line on 1 June 2006, after having been available for 18 years, but the S-10 was reintroduced in about 2009 and is again available.", 3, 0, defaultImage, false, getNextNoteColor(resources)));
-                add(new Note("Send post", "Send email about a new job", 0, 1, defaultImage, false, getNextNoteColor(resources)));
-                add(new Note("Don't smoke", "The Rans S-10 Sakota is an American single-engined, tractor configuration, two-seats in side-by-side configuration, mid-wing monoplane designed by Randy Schlitter for aerobatics and manufactured by Rans Inc. The Sakota is available in kit form for amateur construction.", 0, 0, defaultImage, true, getNextNoteColor(resources)));
-                add(new Note("Don't drink", "You threw it", 0, 0, defaultImage, false, getNextNoteColor(resources)));
-                add(new Note("Story", "The untold story of how Lisa Howard’s intimate diplomacy with Cuba’s revolutionary leader changed the course of the Cold War.", 0, 0, defaultImage, true, getNextNoteColor(resources)));
-                add(new Note("Shame and Survival", "She tried public appearances. She tried being reclusive. She tried leaving the country, and she tried finding a job. But the epic humiliation of 1998, when her affair with Bill Clinton became an all-consuming story, has followed Monica Lewinsky every day.", 0, 0, defaultImage, false, getNextNoteColor(resources)));
-            }};
-        }
-    }
-
-    public static int getNextNoteColor(Resources resources) {
-        int[] androidColors = resources.getIntArray(R.array.androidcolors);
-        int result = androidColors[currentColorNumber % androidColors.length];
-        currentColorNumber++;
-        return result;
+    public static String getKeyNoteId() {
+        return KEY_NOTE_ID;
     }
 
     public static String getKeyNoteElement() {
         return KEY_NOTE_ELEMENT;
+    }
+
+    public static String getKeyShowFavouriteOnly() {
+        return KEY_SHOW_FAVOURITE_ONLY;
+    }
+
+    public static String getKeyNotePosition() {
+        return KEY_NOTE_POSITION;
+    }
+
+    public static String getKeyCurrentScrollPosition() {
+        return KEY_CURRENT_SCROLL_POSITION;
     }
 
     public static String getDateTimeInLocalFormat(Context context, Date date) {
@@ -78,78 +64,42 @@ public class Utils {
         return longDateFormat.format(date) + " " + timeFormat.format(date);
     }
 
-    public static View inflateNote(Fragment fragment, ViewGroup rootContainer, int layoutIDtoInflate, Note note, boolean isMultiplyShowing) {
-
-        View noteElement = fragment.getLayoutInflater().inflate(layoutIDtoInflate, rootContainer, false);
-
-        View layout = noteElement.findViewById(R.id.note_element);
-        layout.setBackgroundColor(note.getColor());
-
-        TextView title = noteElement.findViewById(R.id.note_title);
-        title.setText(note.getTitle());
-
-        LinearLayout imagesListView = noteElement.findViewById(R.id.note_images_list);
-        ArrayList<Bitmap> elementImages = note.getImages();
-        if (!elementImages.isEmpty()) {
-            for (int i = 0; i < elementImages.size(); i++) {
-
-                ImageView image = (ImageView) fragment.getLayoutInflater().inflate(R.layout.note_image, imagesListView, false);
-                image.setImageDrawable(new BitmapDrawable(fragment.getContext().getResources(), elementImages.get(i)));
-                image.setId(View.generateViewId());
-                imagesListView.addView(image);
-
-            }
-        }
-
-        LinearLayout tasksListView = noteElement.findViewById(R.id.note_tasks_list);
-        ArrayList<Note.Task> elementTasks = note.getTasks();
-        if (!elementTasks.isEmpty()) {
-            for (int i = 0; i < elementTasks.size(); i++) {
-
-                MaterialCheckBox taskCheckbox = (MaterialCheckBox) fragment.getLayoutInflater().inflate(R.layout.note_task, tasksListView, false);
-
-                taskCheckbox.setChecked(elementTasks.get(i).isCompleted());
-                taskCheckbox.setId(View.generateViewId());
-                setFlagStrikeThroughText(taskCheckbox, taskCheckbox.isChecked());
-                taskCheckbox.setText(elementTasks.get(i).getText());
-                taskCheckbox.setClickable(!isMultiplyShowing);
-                taskCheckbox.setBackgroundColor(Color.TRANSPARENT);
-                if (!isMultiplyShowing) {
-                    taskCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                        setFlagStrikeThroughText((CheckBox) buttonView, isChecked);
-                    });
-                }
-
-                tasksListView.addView(taskCheckbox);
-            }
-        }
-
-        TextView text = noteElement.findViewById(R.id.note_text);
-        text.setText(note.getText());
-
-        TextView modifiedAt = noteElement.findViewById(R.id.note_modified_at);
-        modifiedAt.setText(Utils.getDateTimeInLocalFormat(fragment.getContext(), note.getModifiedAt()));
-
-        if (isMultiplyShowing) {
-            noteElement.setId(View.generateViewId());
-            title.setId(View.generateViewId());
-            imagesListView.setId(View.generateViewId());
-            tasksListView.setId(View.generateViewId());
-            text.setId(View.generateViewId());
-            modifiedAt.setId(View.generateViewId());
-        }
-
-        rootContainer.addView(noteElement);
-
-        return noteElement;
-
-    }
-
-    private static void setFlagStrikeThroughText(TextView textView, boolean isChecked) {
+    public static void setFlagStrikeThroughText(TextView textView, boolean isChecked) {
         if (isChecked) {
             textView.setPaintFlags(textView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
         } else {
             textView.setPaintFlags(textView.getPaintFlags()  & (~Paint.STRIKE_THRU_TEXT_FLAG));
         }
+    }
+
+    public static void initColorsForNotes(Resources resources) {
+        androidColors = resources.getIntArray(R.array.android_colors);
+    }
+
+    public static int getNextNoteColor() {
+        if (androidColors == null) {
+            return Color.blue(255);
+        }
+        int result = androidColors[currentColorNumber.getAndIncrement() % androidColors.length];
+        return result;
+    }
+
+    public static String encodeToBase64(Bitmap image) {
+        Bitmap immage = image;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        immage.compress(Bitmap.CompressFormat.PNG, 100, baos);
+        byte[] b = baos.toByteArray();
+        String imageEncoded = Base64.encodeToString(b, Base64.DEFAULT);
+
+        return imageEncoded;
+    }
+
+    public static Bitmap decodeFromBase64(String input) {
+        if (input == null) {
+            return null;
+        }
+        byte[] decodedByte = Base64.decode(input, 0);
+        return BitmapFactory
+                .decodeByteArray(decodedByte, 0, decodedByte.length);
     }
 }
